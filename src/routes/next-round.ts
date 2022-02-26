@@ -34,6 +34,7 @@ export const POST: RequestHandler = async (req) => {
 		}
 	}
 	const { server_secret } = doc.docs[0]!.data()
+	await db.collection("keys").doc(doc.docs[0]!.id).delete()
 
 	doc = await db.collection("rooms").where("code", "==", code).get()
 	if (doc.docs.length !== 1) {
