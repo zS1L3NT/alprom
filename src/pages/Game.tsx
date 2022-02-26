@@ -1,7 +1,7 @@
 import React from "react"
 import LetterBox from "../components/LetterBox"
 import Keyboard from "../components/Keyboard"
-import { Center, Grid, SimpleGrid } from "@chakra-ui/react"
+import { Box, Center, Grid, SimpleGrid, VStack } from "@chakra-ui/react"
 
 const Game = () => {
 	const testArray = Array(30).fill(0)
@@ -13,9 +13,19 @@ const Game = () => {
 
 	return (
 		<>
-			<div>Game</div>
+			<Box
+				h="6vh"
+				mb="2.5vh"
+				w="100%"
+				borderWidth="1px"
+				borderColor="white">
+				Game
+			</Box>
 
-			<Center>
+			<Center
+				flexDirection="column"
+				h="90vh"
+				justifyContent="space-between">
 				<Grid templateColumns="repeat(5, min-content)" gap={1.5}>
 					{Array(30)
 						.fill(0)
@@ -27,8 +37,8 @@ const Game = () => {
 							/>
 						))}
 				</Grid>
+				<Keyboard />
 			</Center>
-			<Keyboard></Keyboard>
 		</>
 	)
 }
