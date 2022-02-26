@@ -6,6 +6,8 @@ import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useEffect, useState } from "react"
 
+import { wordList } from "../dictionary"
+
 const Game = () => {
 	const dispatch = useAppDispatch()
 	const [currentRow, setCurrentRow] = useState(0)
@@ -38,7 +40,6 @@ const Game = () => {
 		"y",
 		"z",
 	]
-	const wordArray = ["B", "A", "L", "L", "S", "T", "E", "S", "T", "S"]
 
 	const dummyData: any = {
 		putt: {
@@ -76,21 +77,19 @@ const Game = () => {
 	}
 
 	const wordArrays = useAppSelector(state => state.letters)
+
 	useEffect(() => {
 		document.addEventListener("keydown", event => {
 			switch (event.key) {
 				case "Backspace":
 					dispatch(popLetter())
-					console.log("Back")
 					break
 				case "Enter":
-					console.log("Enter")
 					dispatch(nextRow())
 					// Submits the word
 
 					break
 				default:
-					// console.log(event.key)
 					if (alphabet.includes(event.key.toLowerCase())) {
 						dispatch(
 							pushLetter({
@@ -125,7 +124,6 @@ const Game = () => {
 											<LetterBox
 												key={i}
 												state={guesses[i]}
-												letter={wordArray[i]}
 												isSmall={true}
 											/>
 										))}
