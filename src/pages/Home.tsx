@@ -59,7 +59,11 @@ const Home = () => {
 	const joinRoom = async () => {
 		const collRef = collection(firestore, "rooms")
 		const docs = await getDocs(query(collRef, where("code", "==", roomId)))
-		if (docs.docs.length === 1) {
+		if (docs.docs.length !== 1) {
+			// ! Handle no room found error
+		} else if (username in docs.docs[0]!.data().scores) {
+			// ! Handle username taken error
+		} else {
 			const docRef = doc(collRef, docs.docs[0]!.id)
 			setDoc(
 				docRef,
@@ -75,8 +79,6 @@ const Home = () => {
 				{ merge: true },
 			)
 			navigate("/lobby")
-		} else {
-			// ! Handle
 		}
 	}
 
