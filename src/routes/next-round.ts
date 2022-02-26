@@ -61,7 +61,11 @@ export const POST: RequestHandler = async (req) => {
 	const userData = roomData.scores[username]!
 	if (roomData.words.length === 0) {
 		for (const username in roomData.scores) {
-			roomData.scores[username]!.round = 1
+			roomData.scores[username] = {
+				points: 0,
+				round: 1,
+				guesses: Array(30).fill(0)
+			}
 		}
 
 		await roomDoc.set({
