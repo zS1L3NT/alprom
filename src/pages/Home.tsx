@@ -1,3 +1,18 @@
+import { CgEnter } from "react-icons/cg"
+import { firestore } from "../firebase"
+import { updateRoom } from "../app/slices/room"
+import { useAppDispatch } from "../hooks/useAppDispatch"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import {
+	addDoc,
+	collection,
+	doc,
+	getDocs,
+	query,
+	setDoc,
+	where,
+} from "firebase/firestore"
 import {
 	Button,
 	Center,
@@ -11,12 +26,6 @@ import {
 	InputRightElement,
 	Text,
 } from "@chakra-ui/react"
-import { useEffect, useState } from "react"
-import { CgEnter } from "react-icons/cg"
-import { useNavigate } from "react-router-dom"
-import { useAppDispatch } from "../hooks/useAppDispatch"
-import { useAppSelector } from "../hooks/useAppSelector"
-import { updateRoom } from "../app/slices/room"
 
 const Home = () => {
 	const [username, setUsername] = useState("")
@@ -26,8 +35,50 @@ const Home = () => {
 	const navigate = useNavigate()
 
 	useEffect(() => {
-		dispatch(updateRoom({ code: roomId, username: username }))
+		dispatch(updateRoom({ code: roomId, username }))
 	}, [username, roomId])
+
+	const createRoom = async () => {
+		const roomId = Math.floor(Math.random() * (99999 - 10000)) + 10000
+		await addDoc(collection(firestore, "rooms"), {
+			owner: username,
+			code: roomId,
+			words: [],
+			scores: {
+				[username]: {
+					points: 0,
+					round: 0,
+					guesses: [],
+				},
+			},
+		})
+		dispatch(updateRoom({ code: roomId, username }))
+		navigate("/lobby")
+	}
+
+	const joinRoom = async () => {
+		const collRef = collection(firestore, "rooms")
+		const docs = await getDocs(query(collRef, where("code", "==", roomId)))
+		if (docs.docs.length === 1) {
+			const docRef = doc(collRef, docs.docs[0]!.id)
+			setDoc(
+				docRef,
+				{
+					scores: {
+						[username]: {
+							points: 0,
+							round: 0,
+							guesses: [],
+						},
+					},
+				},
+				{ merge: true },
+			)
+			navigate("/lobby")
+		} else {
+			// ! Handle
+		}
+	}
 
 	return (
 		<Center display="flex" flexDirection="column" gap={2.5}>
@@ -74,9 +125,7 @@ const Home = () => {
 							bgColor="correct"
 							_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
 							_active={{ bgColor: "hsl(115, 29%, 30%)" }}
-							onClick={() => {
-								navigate("/lobby")
-							}}>
+							onClick={joinRoom}>
 							<CgEnter fontSize="1.25em" />
 						</IconButton>
 					</InputRightElement>
@@ -95,6 +144,7 @@ const Home = () => {
 			</HStack>
 			<Button
 				bgColor="correct"
+				onClick={createRoom}
 				_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
 				_active={{ bgColor: "hsl(115, 29%, 30%)" }}>
 				Create a new room
