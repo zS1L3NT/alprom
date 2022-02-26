@@ -24,31 +24,9 @@ const Game = () => {
 	const [currentRow, setCurrentRow] = useState(0)
 	const [isValid, setIsValid] = useState(true)
 	const currentWordRaw = useAppSelector(
-		state => state.letters.data[currentRow],
+		state => state.letters.data[useAppSelector(state => state.letters.row)],
 	)
 	const currentWordList: string[] = []
-
-	useEffect(() => {
-		currentWordRaw.map(wordList => {
-			currentWordList.push(wordList.letter)
-		})
-		//console.log(currentWordList.join("").toLowerCase())
-	}, [currentWordRaw])
-
-	useEffect(() => {
-		console.log(currentWordList.join("").toLowerCase())
-
-		setIsValid(wordList.includes(currentWordList.join("").toLowerCase()))
-
-	}, [currentWordRaw])
-
-	function checkValid(word: string) {
-		if (wordList.includes(word)) {
-			setIsValid(true)
-		} else {
-			setIsValid(false)
-		}
-	}
 
 	const alphabet = [
 		"a",
@@ -114,6 +92,27 @@ const Game = () => {
 		},
 	}
 
+	useEffect(() => {
+		currentWordRaw.map(wordList => {
+			currentWordList.push(wordList.letter)
+		})
+		//console.log(currentWordList.join("").toLowerCase())
+	}, [currentWordRaw])
+
+	useEffect(() => {
+		console.log(currentWordList.join("").toLowerCase())
+
+		setIsValid(wordList.includes(currentWordList.join("").toLowerCase()))
+	}, [currentWordRaw])
+
+	function checkValid(word: string) {
+		if (wordList.includes(word)) {
+			setIsValid(true)
+		} else {
+			setIsValid(false)
+		}
+	}
+
 	const wordArrays = useAppSelector(state => state.letters)
 
 	useEffect(() => {
@@ -140,6 +139,7 @@ const Game = () => {
 			}
 		})
 	}, [])
+
 	return (
 		<>
 			<Center>
