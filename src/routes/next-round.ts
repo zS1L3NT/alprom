@@ -1,14 +1,17 @@
 import admin from "firebase-admin"
+import encryptAes from "../functions/encryptAes"
 import wordlist from "../wordlist.json"
-import { NUMBER, OBJECT, STRING, validate } from "validate-any"
+import { LIST, NUMBER, OBJECT, STRING, validate } from "validate-any"
 import { RequestHandler } from "../functions/withErrorHandling"
 
 const db = admin.firestore()
+let doc: admin.firestore.QuerySnapshot<admin.firestore.DocumentData>
 
 export const POST: RequestHandler = async (req) => {
 	const { success, errors, data } = validate(req.body, OBJECT({
 		code: NUMBER(),
-		username: STRING()
+		username: STRING(),
+		client_key_data: LIST(NUMBER())
 	}), "body")
 
 	if (!success) {
@@ -18,9 +21,21 @@ export const POST: RequestHandler = async (req) => {
 		}
 	}
 
-	const { code, username } = data!
+	const { code, username, client_key_data } = data!
+	const clientKey = Buffer.from(client_key_data).toString("hex")
 
-	const doc = await db.collection("rooms").where("code", "==", code).get()
+	doc = await db.collection("keys").where("client_key", "==", clientKey).get()
+	if (doc.docs.length !== 1) {
+		return {
+			status: 400,
+			data: {
+				message: `Could not fin one key pair with the client_key: ${clientKey}`
+			}
+		}
+	}
+	const { serverSecret } = doc.docs[0]!.data()
+
+	doc = await db.collection("rooms").where("code", "==", code).get()
 	if (doc.docs.length !== 1) {
 		return {
 			status: 400,
@@ -40,7 +55,7 @@ export const POST: RequestHandler = async (req) => {
 		}
 	}
 
-	const newWord = wordlist[Math.floor(Math.random() * wordlist.length)]
+	const newWord = wordlist[Math.floor(Math.random() * wordlist.length)]!
 	const roomDoc = db.collection("rooms").doc(doc.docs[0]!.id)
 
 	const userData = roomData.scores[username]!
@@ -58,7 +73,7 @@ export const POST: RequestHandler = async (req) => {
 		return {
 			status: 200,
 			data: {
-				word: newWord
+				word: encryptAes(serverSecret, newWord)
 			}
 		}
 	}
@@ -87,7 +102,7 @@ export const POST: RequestHandler = async (req) => {
 		return {
 			status: 200,
 			data: {
-				word: newWord
+				word: encryptAes(serverSecret, newWord)
 			}
 		}
 	}
@@ -104,7 +119,7 @@ export const POST: RequestHandler = async (req) => {
 	return {
 		status: 200,
 		data: {
-			word: newWord
+			word: encryptAes(serverSecret, newWord)
 		}
 	}
 }
