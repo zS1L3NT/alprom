@@ -1,6 +1,17 @@
 import Keyboard from "../components/Keyboard"
 import LetterBox from "../components/LetterBox"
-import { Box, Center, Grid, SimpleGrid, VStack } from "@chakra-ui/react"
+import {
+	Alert,
+	AlertDescription,
+	AlertIcon,
+	AlertTitle,
+	Box,
+	Center,
+	Grid,
+	SimpleGrid,
+	Text,
+	VStack,
+} from "@chakra-ui/react"
 import { nextRow, popLetter, pushLetter } from "../app/slices/letters"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
@@ -11,6 +22,33 @@ import { wordList } from "../dictionary"
 const Game = () => {
 	const dispatch = useAppDispatch()
 	const [currentRow, setCurrentRow] = useState(0)
+	const [isValid, setIsValid] = useState(true)
+	const currentWordRaw = useAppSelector(
+		state => state.letters.data[currentRow],
+	)
+	const currentWordList: string[] = []
+
+	useEffect(() => {
+		currentWordRaw.map(wordList => {
+			currentWordList.push(wordList.letter)
+		})
+		//console.log(currentWordList.join("").toLowerCase())
+	}, [currentWordRaw])
+
+	useEffect(() => {
+		console.log(currentWordList.join("").toLowerCase())
+
+		setIsValid(wordList.includes(currentWordList.join("").toLowerCase()))
+
+	}, [currentWordRaw])
+
+	function checkValid(word: string) {
+		if (wordList.includes(word)) {
+			setIsValid(true)
+		} else {
+			setIsValid(false)
+		}
+	}
 
 	const alphabet = [
 		"a",
@@ -135,10 +173,22 @@ const Game = () => {
 
 				{/* main grid and keyboard */}
 				<Center flexDirection="column" h="90vh">
+					<Alert
+						mb={3}
+						status="error"
+						display={!isValid ? "inherit" : "none"}>
+						<AlertIcon />
+						<AlertTitle mr={2}>
+							The word you typed doesn't exist!
+						</AlertTitle>
+						<AlertDescription>
+							Please type another word.
+						</AlertDescription>
+					</Alert>
 					<Grid
 						templateColumns="repeat(5, min-content)"
 						gap={1.5}
-						marginBottom={10}>
+						marginBottom={5}>
 						{wordArrays.data.flat().map((letter, index) => (
 							<LetterBox
 								key={index}
