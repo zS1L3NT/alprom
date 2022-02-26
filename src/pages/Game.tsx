@@ -21,8 +21,8 @@ import { wordList } from "../dictionary"
 
 const Game = () => {
 	const dispatch = useAppDispatch()
-	const [currentRow, setCurrentRow] = useState(0)
 	const [isValid, setIsValid] = useState(true)
+	const [currentWord, setCurrentWord] = useState("")
 	const currentWordRaw = useAppSelector(
 		state => state.letters.data[useAppSelector(state => state.letters.row)],
 	)
@@ -96,22 +96,14 @@ const Game = () => {
 		currentWordRaw.map(wordList => {
 			currentWordList.push(wordList.letter)
 		})
-		//console.log(currentWordList.join("").toLowerCase())
+		setCurrentWord(currentWordList.join("").toLowerCase())
 	}, [currentWordRaw])
 
 	useEffect(() => {
-		console.log(currentWordList.join("").toLowerCase())
-
-		setIsValid(wordList.includes(currentWordList.join("").toLowerCase()))
-	}, [currentWordRaw])
-
-	function checkValid(word: string) {
-		if (wordList.includes(word)) {
-			setIsValid(true)
-		} else {
-			setIsValid(false)
+		if (currentWord.length == 5) {
+			setIsValid(wordList.includes(currentWord))
 		}
-	}
+	}, [currentWord])
 
 	const wordArrays = useAppSelector(state => state.letters)
 
@@ -120,11 +112,16 @@ const Game = () => {
 			switch (event.key) {
 				case "Backspace":
 					dispatch(popLetter())
+					setIsValid(true)
 					break
 				case "Enter":
 					dispatch(nextRow())
+					if (isValid) {
+						console.log(currentWord)
+						// code to check against answer word
+					}
 					// Submits the word
-
+					setIsValid(true)
 					break
 				default:
 					if (alphabet.includes(event.key.toLowerCase())) {
@@ -173,18 +170,19 @@ const Game = () => {
 
 				{/* main grid and keyboard */}
 				<Center flexDirection="column" h="90vh">
-					<Alert
-						mb={3}
-						status="error"
-						display={!isValid ? "inherit" : "none"}>
-						<AlertIcon />
-						<AlertTitle mr={2}>
-							The word you typed doesn't exist!
-						</AlertTitle>
-						<AlertDescription>
-							Please type another word.
-						</AlertDescription>
-					</Alert>
+					{isValid ? (
+						<></>
+					) : (
+						<Alert mb={3} status="error" display="inherit">
+							<AlertIcon />
+							<AlertTitle mr={2}>
+								The word you entered doesn't exist!
+							</AlertTitle>
+							<AlertDescription>
+								Please type another word.
+							</AlertDescription>
+						</Alert>
+					)}
 					<Grid
 						templateColumns="repeat(5, min-content)"
 						gap={1.5}
