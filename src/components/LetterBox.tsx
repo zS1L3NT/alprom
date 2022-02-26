@@ -4,6 +4,7 @@ import { useLayoutEffect, useState } from "react"
 interface LetterBoxProps {
 	state: 0 | 1 | 2 | 3
 	letter: string
+	isSmall?: boolean
 }
 
 const LetterBox = (props: LetterBoxProps) => {
@@ -28,11 +29,11 @@ const LetterBox = (props: LetterBoxProps) => {
 
 	return (
 		<Square
-			size="4.5em"
+			size={props.isSmall ? "1.5em" : "4.5em"}
 			border={props.state === 0 ? "2px solid hsl(240, 2%, 23%)" : "none"}
 			bg={color}>
-			<Text fontWeight="semibold" fontSize="2.5em">
-				{props.letter}
+			<Text fontWeight="semibold" fontSize={"2.5em"}>
+				{props.isSmall  ? "" : props.letter}
 			</Text>
 		</Square>
 	)
