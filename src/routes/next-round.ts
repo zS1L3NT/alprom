@@ -1,5 +1,5 @@
 import admin from "firebase-admin"
-import encryptAes from "../functions/encryptAes"
+import encrypt from "../functions/encrypt"
 import wordlist from "../wordlist.json"
 import { LIST, NUMBER, OBJECT, STRING, validate } from "validate-any"
 import { RequestHandler } from "../functions/withErrorHandling"
@@ -71,7 +71,7 @@ export const POST: RequestHandler = async (req) => {
 		return {
 			status: 200,
 			data: {
-				word: encryptAes(server_secret, newWord)
+				word: encrypt(server_secret, newWord)
 			}
 		}
 	}
@@ -100,7 +100,7 @@ export const POST: RequestHandler = async (req) => {
 		return {
 			status: 200,
 			data: {
-				word: encryptAes(server_secret, newWord)
+				word: encrypt(server_secret, newWord)
 			}
 		}
 	}
@@ -117,7 +117,7 @@ export const POST: RequestHandler = async (req) => {
 	return {
 		status: 200,
 		data: {
-			word: encryptAes(server_secret, newWord)
+			word: encrypt(server_secret, newWord)
 		}
 	}
 }
