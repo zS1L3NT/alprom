@@ -1,5 +1,6 @@
 import Axios from "axios"
 import crypto from "crypto-browserify"
+import SimpleCrypto from "simple-crypto-js"
 import { useTryAsync } from "no-try"
 
 export default async (data: { code: number, username: string }): Promise<{ word: string }> => {
@@ -28,14 +29,9 @@ export default async (data: { code: number, username: string }): Promise<{ word:
 		throw new Error("Failed to get next round from the server")
 	}
 
-	const { aesWord } = res2.data
+	const word = new SimpleCrypto(clientSecret).decrypt(res2.data.word) as string
 
-	const key = clientSecret.repeat(3).slice(0, 32)
-	const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key), Buffer.alloc(16, 0))
-
-	let decrypted = decipher.update(Buffer.from(aesWord, "hex"))
-	decrypted = Buffer.concat([decrypted, decipher.final()])
 	return {
-		word: decrypted.toString()
+		word: word.toUpperCase()
 	}
 }
