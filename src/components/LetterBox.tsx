@@ -2,7 +2,7 @@ import { Box, Button, Center, Square, Text } from "@chakra-ui/react"
 import { useLayoutEffect, useState } from "react"
 
 interface LetterBoxProps {
-	state: 0 | 1 | 2 | 3
+	state: number
 	letter: string
 	isSmall?: boolean
 }
@@ -33,7 +33,7 @@ const LetterBox = (props: LetterBoxProps) => {
 			border={props.state === 0 ? "2px solid hsl(240, 2%, 23%)" : "none"}
 			bg={color}>
 			<Text fontWeight="semibold" fontSize={"2.5em"}>
-				{props.isSmall  ? "" : props.letter}
+				{props.isSmall ? "" : props.letter}
 			</Text>
 		</Square>
 	)

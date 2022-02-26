@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+
 import {
 	Button,
 	Square,
@@ -44,30 +45,24 @@ const Keyboard = () => {
 		{ letter: "M", state: 0 },
 	] as KeysData
 
-	useEffect(() => {
-		document.addEventListener("keydown", event => {
-			console.table(event.key)
-		})
-	})
-
 	return (
 		<>
 			<VStack justify="center" spacing={1.5}>
 				<HStack spacing={1.5}>
 					{keysmap.slice(0, 10).map((key, index) => (
 						<Key
-							key={index}
 							letter={key.letter}
 							state={key.state}
+							key={index}
 						/>
 					))}
 				</HStack>
 				<HStack spacing={1.5}>
 					{keysmap.slice(10, 19).map((key, index) => (
 						<Key
-							key={index}
 							letter={key.letter}
 							state={key.state}
+							key={index}
 						/>
 					))}
 				</HStack>
@@ -84,9 +79,9 @@ const Keyboard = () => {
 					</Button>
 					{keysmap.slice(19, 27).map((key, index) => (
 						<Key
-							key={index}
 							letter={key.letter}
 							state={key.state}
+							key={index}
 						/>
 					))}
 					<Button
