@@ -1,14 +1,13 @@
-import React from 'react'
-import LetterBox from '../components/LetterBox'
+import React from "react"
+import LetterBox from "../components/LetterBox"
+import Keyboard from "../components/Keyboard"
 
 const Game = () => {
-  return (
-	<>
-		<div>Game</div>
-
-		<LetterBox />
-	</>
-  )
+	return (
+		<>
+			<Keyboard></Keyboard>
+		</>
+	)
 }
 
 export default Game
