@@ -1,44 +1,105 @@
+import getNextRound from "../functions/getNextRound"
 import React, { useEffect } from "react"
-import { collection, onSnapshot, query, where } from "firebase/firestore"
 import { firestore } from "../firebase"
 import { onRoomUpdate } from "../app/slices/room"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useNavigate } from "react-router-dom"
 import {
-	Box,
+	collection,
+	deleteDoc,
+	doc,
+	getDocs,
+	onSnapshot,
+	query,
+	where,
+} from "firebase/firestore"
+import {
 	Button,
 	Center,
-	IconButton,
 	ListItem,
 	OrderedList,
 	Skeleton,
-	Spacer,
 	Text,
+	useToast,
 	VStack,
 } from "@chakra-ui/react"
 
 const Lobby = () => {
 	const dispatch = useAppDispatch()
 	const navigate = useNavigate()
-	const roomId = useAppSelector(state => state.room?.code)
+	const toast = useToast()
 
-	const users = ["John", "Jane", "Jim", "Jill", "Jack", "Bob", "Bobby", "Eve"]
+	const room = useAppSelector(state => state.room)
 
 	useEffect(() => {
-		if (!roomId) return
+		if (!room) return
 
 		const unsub = onSnapshot(
-			query(collection(firestore, "rooms"), where("code", "==", roomId)),
+			query(
+				collection(firestore, "rooms"),
+				where("code", "==", room?.code),
+			),
 			doc => {
 				if (doc.docs.length === 1) {
 					dispatch(onRoomUpdate(doc.docs[0]!.data()))
+				} else {
+					toast({
+						title: "Error",
+						description: "Room closed!!",
+						status: "error",
+						duration: 2500,
+						isClosable: true,
+						onCloseComplete: () => {
+							navigate("/")
+						},
+					})
 				}
 			},
 		)
 
 		return unsub
-	}, [roomId])
+	}, [room?.code])
+
+	useEffect(() => {
+		if (!room) return
+
+		if (room.scores[room.username]?.round === 1) {
+			navigate("/game")
+		}
+	}, [room?.scores])
+
+	const startGame = async () => {
+		if (!room) return
+
+		const { word } = await getNextRound({
+			code: room.code,
+			username: room.username,
+		})
+
+		// : Wait for Joey and Putt
+	}
+
+	const closeRoom = async () => {
+		if (!room) return
+
+		const collRef = collection(firestore, "rooms")
+		const docs = await getDocs(
+			query(collRef, where("code", "==", room.code)),
+		)
+		if (docs.docs.length !== 1) {
+			toast({
+				title: "Error",
+				description: "Could not find the room you were looking for",
+				status: "error",
+				duration: 5000,
+				isClosable: true,
+			})
+		}
+
+		await deleteDoc(doc(collRef, docs.docs[0].id))
+		navigate("/")
+	}
 
 	return (
 		<Center flexDir="column">
@@ -46,9 +107,9 @@ const Lobby = () => {
 				<Text fontSize="4xl" fontWeight="semibold">
 					Room Id
 				</Text>
-				<Skeleton isLoaded={roomId !== undefined}>
+				<Skeleton isLoaded={!!room?.code}>
 					<Text fontSize="3xl" fontWeight="semibold">
-						{roomId ? roomId : "000000"}
+						{room ? room.code : "000000"}
 					</Text>
 				</Skeleton>
 			</VStack>
@@ -57,10 +118,10 @@ const Lobby = () => {
 					textDecoration="underline"
 					fontSize="2xl"
 					fontWeight="semibold">
-					People you are battling against
+					People in this lobby
 				</Text>
 				<OrderedList>
-					{users.map((name, index) => (
+					{Object.keys(room?.scores || {}).map((name, index) => (
 						<ListItem
 							key={index}
 							fontSize="xl"
@@ -81,7 +142,7 @@ const Lobby = () => {
 				bgColor="correct"
 				_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
 				_active={{ bgColor: "hsl(115, 29%, 30%)" }}
-				onClick={() => navigate("/game")}>
+				onClick={startGame}>
 				Start Game
 			</Button>
 			<Button
@@ -90,9 +151,7 @@ const Lobby = () => {
 				bgColor="hsl(0, 70%, 53%)"
 				_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
 				_active={{ bgColor: "hsl(0, 70%, 40%)" }}
-				onClick={() => {
-					navigate("/")
-				}}>
+				onClick={closeRoom}>
 				Close Room
 			</Button>
 		</Center>
