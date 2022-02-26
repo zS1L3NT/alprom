@@ -55,12 +55,20 @@ const Keyboard = () => {
 			<VStack justify="center" spacing={1.5}>
 				<HStack spacing={1.5}>
 					{keysmap.slice(0, 10).map((key, index) => (
-						<Key letter={key.letter} state={key.state} />
+						<Key
+							key={index}
+							letter={key.letter}
+							state={key.state}
+						/>
 					))}
 				</HStack>
 				<HStack spacing={1.5}>
 					{keysmap.slice(10, 19).map((key, index) => (
-						<Key letter={key.letter} state={key.state} />
+						<Key
+							key={index}
+							letter={key.letter}
+							state={key.state}
+						/>
 					))}
 				</HStack>
 				<HStack spacing={1.5}>
@@ -75,7 +83,11 @@ const Keyboard = () => {
 						ENTER
 					</Button>
 					{keysmap.slice(19, 27).map((key, index) => (
-						<Key letter={key.letter} state={key.state} />
+						<Key
+							key={index}
+							letter={key.letter}
+							state={key.state}
+						/>
 					))}
 					<Button
 						h="60px"

@@ -10,15 +10,6 @@ const Game = () => {
 
 	return (
 		<>
-			<Box
-				h="6vh"
-				mb="2.5vh"
-				w="100%"
-				borderWidth="1px"
-				borderColor="white">
-				Game
-			</Box>
-
 			<Center
 				flexDirection="column"
 				h="90vh"
