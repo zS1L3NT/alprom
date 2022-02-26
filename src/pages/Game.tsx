@@ -1,18 +1,109 @@
-import React from "react"
+import { useEffect, useState } from "react"
 import LetterBox from "../components/LetterBox"
 import Keyboard from "../components/Keyboard"
 import { Box, Center, Grid, SimpleGrid, VStack } from "@chakra-ui/react"
 import { useAppSelector } from "../hooks/useAppSelector"
-
+import { useAppDispatch } from "../hooks/useAppDispatch"
+import { popLetter, pushLetter, nextRow } from "../app/slices/letters"
 
 const Game = () => {
-	const testArray = Array(30).fill(0)
+	const dispatch = useAppDispatch()
+	const [currentRow, setCurrentRow] = useState(0)
 
-	const wordArray = ["B", "A", "L", "L", "S", "T", "E", "S", "T", "S"]
+	const alphabet = [
+		"a",
+		"b",
+		"c",
+		"d",
+		"e",
+		"f",
+		"g",
+		"h",
+		"i",
+		"j",
+		"k",
+		"l",
+		"m",
+		"n",
+		"o",
+		"p",
+		"q",
+		"r",
+		"s",
+		"t",
+		"u",
+		"v",
+		"w",
+		"x",
+		"y",
+		"z",
+	]
 
-	const wordArrays = useAppSelector((state) => state.letters)
-	console.log(wordArrays)
-	
+	const testArray = [
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+		{ letter: "", state: 0 },
+	]
+
+	const current = [] as Array<string>
+
+	const wordArrays = useAppSelector(state => state.letters)
+
+	useEffect(() => {
+		document.addEventListener("keydown", event => {
+			switch (event.key) {
+				case "Backspace":
+					console.log("Back")
+					dispatch(popLetter())
+					break
+				case "Enter":
+					console.log("Enter")
+					dispatch(nextRow())
+
+					// Submits the word
+					break
+				default:
+					// console.log(event.key)
+					if (alphabet.includes(event.key.toLowerCase())) {
+						dispatch(
+							pushLetter({
+								letter: event.key.toUpperCase(),
+								state: 0,
+							}),
+						)
+					}
+
+					break
+			}
+		})
+	}, [])
 
 	return (
 		<>
@@ -30,15 +121,13 @@ const Game = () => {
 				h="90vh"
 				justifyContent="space-between">
 				<Grid templateColumns="repeat(5, min-content)" gap={1.5}>
-					{Array(30)
-						.fill(0)
-						.map((_, i) => (
-							<LetterBox
-								key={i}
-								state={testArray[i]}
-								letter={wordArray[i]}
-							/>
-						))}
+					{wordArrays.data.flat().map((letter, index) => (
+						<LetterBox
+							key={index}
+							state={letter.state}
+							letter={letter.letter}
+						/>
+					))}
 				</Grid>
 				<Keyboard />
 			</Center>

@@ -2,7 +2,7 @@ import { Box, Button, Center, Square, Text } from "@chakra-ui/react"
 import { useLayoutEffect, useState } from "react"
 
 interface LetterBoxProps {
-	state: 0 | 1 | 2 | 3
+	state: number
 	letter: string
 }
 

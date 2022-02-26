@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { useAppDispatch } from "../hooks/useAppDispatch"
-import { updateLetter } from "../app/slices/letters"
+
 import {
 	Button,
 	Square,
@@ -17,7 +16,6 @@ import Key from "./Key"
 type KeysData = { letter: string; state: 0 | 1 | 2 | 3 }[]
 
 const Keyboard = () => {
-	const dispatch = useAppDispatch()
 	const keysmap = [
 		{ letter: "Q", state: 0 },
 		{ letter: "W", state: 0 },
@@ -47,25 +45,25 @@ const Keyboard = () => {
 		{ letter: "M", state: 0 },
 	] as KeysData
 
-	useEffect(() => {
-		document.addEventListener("keydown", event => {
-			console.table(event.key)
-			dispatch(updateLetter({letter: event.key, state: 1}))
-
-		})
-	})
-
 	return (
 		<>
 			<VStack justify="center" spacing={1.5}>
 				<HStack spacing={1.5}>
 					{keysmap.slice(0, 10).map((key, index) => (
-						<Key letter={key.letter} state={key.state} />
+						<Key
+							letter={key.letter}
+							state={key.state}
+							key={index}
+						/>
 					))}
 				</HStack>
 				<HStack spacing={1.5}>
 					{keysmap.slice(10, 19).map((key, index) => (
-						<Key letter={key.letter} state={key.state} />
+						<Key
+							letter={key.letter}
+							state={key.state}
+							key={index}
+						/>
 					))}
 				</HStack>
 				<HStack spacing={1.5}>
@@ -80,7 +78,11 @@ const Keyboard = () => {
 						ENTER
 					</Button>
 					{keysmap.slice(19, 27).map((key, index) => (
-						<Key letter={key.letter} state={key.state} />
+						<Key
+							letter={key.letter}
+							state={key.state}
+							key={index}
+						/>
 					))}
 					<Button
 						h="60px"
