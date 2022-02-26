@@ -2,12 +2,18 @@ import App from "./App"
 import React from "react"
 import ReactDOM from "react-dom"
 import store from "./app/store"
-import { background, ChakraProvider, extendTheme } from "@chakra-ui/react"
+import { background, ChakraProvider, extendTheme, type ThemeConfig } from "@chakra-ui/react"
 import { BrowserRouter } from "react-router-dom"
 import { Provider as ReduxProvider } from "react-redux"
 import "./index.css"
 
-const theme = extendTheme({
+const config: ThemeConfig = {
+	initialColorMode: "dark",
+	useSystemColorMode: false,
+}
+
+const theme = extendTheme({ 
+	config,
 	colors: {
 		correct: "hsl(115, 29%, 43%)",
 		present: "hsl(49, 51%, 47%)",

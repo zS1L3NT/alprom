@@ -1,8 +1,9 @@
+import { Box, Center, Text } from '@chakra-ui/react'
 import React from 'react'
 
 const Lobby = () => {
   return (
-	<div>Lobby</div>
+		<Box>Lobby</Box>
   )
 }
 
