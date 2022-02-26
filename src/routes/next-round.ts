@@ -57,7 +57,9 @@ export const POST: RequestHandler = async (req) => {
 		}, { merge: true })
 		return {
 			status: 200,
-			data: {}
+			data: {
+				word: newWord
+			}
 		}
 	}
 
@@ -84,7 +86,9 @@ export const POST: RequestHandler = async (req) => {
 		}, { merge: true })
 		return {
 			status: 200,
-			data: {}
+			data: {
+				word: newWord
+			}
 		}
 	}
 
@@ -99,6 +103,8 @@ export const POST: RequestHandler = async (req) => {
 	}, { merge: true })
 	return {
 		status: 200,
-		data: {}
+		data: {
+			word: newWord
+		}
 	}
 }
