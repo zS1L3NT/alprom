@@ -1,7 +1,7 @@
 import getNextRound from "../functions/getNextRound"
 import React, { useEffect } from "react"
 import { firestore } from "../firebase"
-import { onRoomUpdate } from "../app/slices/room"
+import { onRoomUpdate, setWord } from "../app/slices/room"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useNavigate } from "react-router-dom"
@@ -76,7 +76,7 @@ const Lobby = () => {
 			username: room.username,
 		})
 
-		// : Wait for Joey and Putt
+		dispatch(setWord(word))
 	}
 
 	const closeRoom = async () => {
@@ -114,7 +114,7 @@ const Lobby = () => {
 		}
 
 		await setDoc(
-			doc(collRef, docs.docs[0].id),
+			doc(collRef, docs.docs[0]!.id),
 			{
 				scores: {
 					[room.username]: deleteField(),
