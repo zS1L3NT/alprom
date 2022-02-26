@@ -75,7 +75,10 @@ const Game = () => {
 		},
 	}
 
+	// get data from redux
 	const wordArrays = useAppSelector(state => state.letters)
+	const playersState: any = useAppSelector(state => state.room)
+	console.log("players state",playersState)
 
 	useEffect(() => {
 		document.addEventListener("keydown", event => {
@@ -106,13 +109,16 @@ const Game = () => {
 			<Center>
 				<SimpleGrid columns={2}>
 					{/* left side players */}
+					
 					<SimpleGrid
 						columns={2}
 						columnGap={4}
 						rowGap={8}
 						paddingRight={8}>
-						{Object.keys(dummyData).map((key, index) => {
-							const guesses = dummyData[key].guesses
+						{/* map player scores dictionary to 6x6 grid */}
+						{Object.keys(playersState.scores).map((key, index) => {
+							// get each player's guesses
+							var guessesArr: any = playersState.scores[key].guesses
 							return (
 								<Grid
 									key={index}
@@ -121,9 +127,10 @@ const Game = () => {
 									{Array(30)
 										.fill(0)
 										.map((_, i) => (
+											guessesArr == undefined ? <></> :
 											<LetterBox
 												key={`${index}-${i}`}
-												state={guesses[i]}
+												state={guessesArr[i]}
 												isSmall={true}
 											/>
 										))}
