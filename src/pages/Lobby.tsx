@@ -11,18 +11,28 @@ import {
 } from "@chakra-ui/react"
 import React from "react"
 import { useNavigate } from "react-router-dom"
+import { useAppSelector } from "../hooks/useAppSelector"
 
 const Lobby = () => {
 	const navigate = useNavigate()
+	const roomId = useAppSelector(state => state.metadata?.code)
 
 	const users = ["John", "Jane", "Jim", "Jill", "Jack", "Bob", "Bobby", "Eve"]
 
 	return (
 		<Center flexDir="column">
+			<VStack mb="2em" spacing={0}>
+				<Text fontSize="4xl" fontWeight="semibold">
+					Room Id
+				</Text>
+				<Text fontSize="3xl" fontWeight="semibold">
+					{roomId}
+				</Text>
+			</VStack>
 			<VStack mb="5em">
 				<Text
 					textDecoration="underline"
-					fontSize="3xl"
+					fontSize="2xl"
 					fontWeight="semibold">
 					People you are battling against
 				</Text>
@@ -60,7 +70,7 @@ const Lobby = () => {
 				onClick={() => {
 					navigate("/")
 				}}>
-				Exit Room
+				Close Room
 			</Button>
 		</Center>
 	)
