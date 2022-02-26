@@ -13,15 +13,17 @@ import {
 } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { CgEnter } from "react-icons/cg"
+import { useNavigate } from "react-router-dom"
 
 const Home = () => {
 	const [username, setUsername] = useState("")
 	const [roomId, setRoomId] = useState("")
 
+	const navigate = useNavigate()
+
 	// useEffect(() => {
 	// 	console.table({ username, roomId })
 	// })
-
 
 	return (
 		<Center display="flex" flexDirection="column" gap={2.5}>
@@ -67,8 +69,11 @@ const Home = () => {
 							aria-label="join-room"
 							bgColor="correct"
 							_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
-							_active={{ bgColor: "hsl(115, 29%, 30%)" }}>
-							<CgEnter />
+							_active={{ bgColor: "hsl(115, 29%, 30%)" }}
+							onClick={() => {
+								navigate("/lobby")
+							}}>
+							<CgEnter fontSize="1.25em"/>
 						</IconButton>
 					</InputRightElement>
 				</InputGroup>
