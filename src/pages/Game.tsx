@@ -5,10 +5,7 @@ import LetterBox from "../components/LetterBox"
 const Game = () => {
 	const testArray = Array(30).fill(0)
 
-	const wordArray = [
-		["B", "A", "L", "L", "S"],
-		["T", "E", "S", "T", "S"],
-	]
+	const wordArray = ["B", "A", "L", "L", "S", "T", "E", "S", "T", "S"]
 
 	return (
 		<>
@@ -22,7 +19,7 @@ const Game = () => {
 							<LetterBox
 								key={i}
 								state={testArray[i]}
-								letter={wordArray[Math.floor(i / 5)]?.[i % 5]}
+								letter={wordArray[i]}
 							/>
 						))}
 				</Grid>
