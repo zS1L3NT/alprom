@@ -25,6 +25,7 @@ import {
 	InputGroup,
 	InputRightElement,
 	Text,
+	useToast,
 } from "@chakra-ui/react"
 
 const Home = () => {
@@ -33,6 +34,7 @@ const Home = () => {
 	const dispatch = useAppDispatch()
 
 	const navigate = useNavigate()
+	const toast = useToast()
 
 	useEffect(() => {
 		if (roomId) {
@@ -41,6 +43,15 @@ const Home = () => {
 	}, [username, roomId])
 
 	const createRoom = async () => {
+		if (username === "") {
+			toast({
+				title: "Please enter a username",
+				status: "error",
+				duration: 2500,
+				isClosable: true,
+			})
+			return
+		}
 		const roomId = Math.floor(Math.random() * (99999 - 10000)) + 10000
 		await addDoc(collection(firestore, "rooms"), {
 			owner: username,
@@ -59,12 +70,31 @@ const Home = () => {
 	}
 
 	const joinRoom = async () => {
+		if (username === "") {
+			toast({
+				title: "Please enter a username",
+				status: "error",
+			})
+			return
+		}
 		const collRef = collection(firestore, "rooms")
 		const docs = await getDocs(query(collRef, where("code", "==", roomId)))
 		if (docs.docs.length !== 1) {
-			// ! Handle no room found error
+			toast({
+				title: "Error",
+				description: "Room does not exist",
+				status: "error",
+				duration: 2500,
+				isClosable: true,
+			})
 		} else if (username in docs.docs[0]!.data().scores) {
-			// ! Handle username taken error
+			toast({
+				title: "Error",
+				description: "Username not available",
+				status: "error",
+				duration: 2500,
+				isClosable: true,
+			})
 		} else {
 			const docRef = doc(collRef, docs.docs[0]!.id)
 			setDoc(
@@ -125,6 +155,9 @@ const Home = () => {
 					/>
 					<InputRightElement>
 						<IconButton
+							isDisabled={
+								!roomId || roomId < 10000 || roomId > 99999
+							}
 							aria-label="join-room"
 							bgColor="correct"
 							_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
@@ -147,6 +180,7 @@ const Home = () => {
 				<Divider />
 			</HStack>
 			<Button
+				isDisabled={!!roomId}
 				bgColor="correct"
 				onClick={createRoom}
 				_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
