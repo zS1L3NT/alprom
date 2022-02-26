@@ -3,7 +3,7 @@ import { useLayoutEffect, useState } from "react"
 
 interface LetterBoxProps {
 	state: number
-	letter: string
+	letter?: string
 	isSmall?: boolean
 }
 
