@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react"
+import { useAppDispatch } from "../hooks/useAppDispatch"
+import { updateLetter } from "../app/slices/letters"
 import {
 	Button,
 	Square,
@@ -15,6 +17,7 @@ import Key from "./Key"
 type KeysData = { letter: string; state: 0 | 1 | 2 | 3 }[]
 
 const Keyboard = () => {
+	const dispatch = useAppDispatch()
 	const keysmap = [
 		{ letter: "Q", state: 0 },
 		{ letter: "W", state: 0 },
@@ -47,6 +50,8 @@ const Keyboard = () => {
 	useEffect(() => {
 		document.addEventListener("keydown", event => {
 			console.table(event.key)
+			dispatch(updateLetter({letter: event.key, state: 1}))
+
 		})
 	})
 

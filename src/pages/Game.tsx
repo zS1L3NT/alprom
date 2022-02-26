@@ -2,11 +2,17 @@ import React from "react"
 import LetterBox from "../components/LetterBox"
 import Keyboard from "../components/Keyboard"
 import { Box, Center, Grid, SimpleGrid, VStack } from "@chakra-ui/react"
+import { useAppSelector } from "../hooks/useAppSelector"
+
 
 const Game = () => {
 	const testArray = Array(30).fill(0)
 
 	const wordArray = ["B", "A", "L", "L", "S", "T", "E", "S", "T", "S"]
+
+	const wordArrays = useAppSelector((state) => state.letters)
+	console.log(wordArrays)
+	
 
 	return (
 		<>
