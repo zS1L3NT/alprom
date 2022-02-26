@@ -1,34 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 type RoomData = {
-	owner: string
-	code: number
 	username: string
+	owner: string | null
+	code: number | null
 	scores: Record<string, {
 		points: number
 		round: number
 		guesses: Array<0 | 1 | 2 | 3>
-	}>
-} | null
+	}> | null
+}
 
 const slice = createSlice({
 	name: "room",
-	initialState: null as RoomData,
+	initialState: {
+		owner: null,
+		code: null,
+		username: "",
+		scores: {}
+	} as RoomData,
 	reducers: {
-		updateRoom: (state, action: PayloadAction<{ code: number; username: string }>) => {
-			return state ? {
+		updateRoom: (state, action: PayloadAction<{ code: number | null; username: string }>) => {
+			return {
 				...state,
 				code: action.payload.code,
 				username: action.payload.username
-			} : {
-				owner: "",
-				code: action.payload.code,
-				username: action.payload.username,
-				scores: {}
 			}
 		},
 		onRoomUpdate: (state, action: PayloadAction<any>) => {
-			return state && {
+			return {
 				owner: action.payload.owner,
 				code: action.payload.code,
 				username: state.username,

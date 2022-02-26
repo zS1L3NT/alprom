@@ -37,9 +37,7 @@ const Home = () => {
 	const toast = useToast()
 
 	useEffect(() => {
-		if (roomId) {
-			dispatch(updateRoom({ code: roomId, username }))
-		}
+		dispatch(updateRoom({ code: roomId, username }))
 	}, [username, roomId])
 
 	const createRoom = async () => {
@@ -52,6 +50,7 @@ const Home = () => {
 			})
 			return
 		}
+
 		const roomId = Math.floor(Math.random() * (99999 - 10000)) + 10000
 		await addDoc(collection(firestore, "rooms"), {
 			owner: username,
@@ -65,6 +64,7 @@ const Home = () => {
 				},
 			},
 		})
+
 		dispatch(updateRoom({ code: roomId, username }))
 		navigate("/lobby")
 	}
@@ -77,6 +77,7 @@ const Home = () => {
 			})
 			return
 		}
+
 		const collRef = collection(firestore, "rooms")
 		const docs = await getDocs(query(collRef, where("code", "==", roomId)))
 		if (docs.docs.length !== 1) {

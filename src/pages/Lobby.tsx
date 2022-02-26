@@ -8,10 +8,12 @@ import { useNavigate } from "react-router-dom"
 import {
 	collection,
 	deleteDoc,
+	deleteField,
 	doc,
 	getDocs,
 	onSnapshot,
 	query,
+	setDoc,
 	where,
 } from "firebase/firestore"
 import {
@@ -34,8 +36,6 @@ const Lobby = () => {
 	const room = useAppSelector(state => state.room)
 
 	useEffect(() => {
-		if (!room) return
-
 		const unsub = onSnapshot(
 			query(
 				collection(firestore, "rooms"),
@@ -63,15 +63,13 @@ const Lobby = () => {
 	}, [room?.code])
 
 	useEffect(() => {
-		if (!room) return
-
-		if (room.scores[room.username]?.round === 1) {
+		if (room.scores?.[room.username]?.round === 1) {
 			navigate("/game")
 		}
 	}, [room?.scores])
 
 	const startGame = async () => {
-		if (!room) return
+		if (!room.code) return
 
 		const { word } = await getNextRound({
 			code: room.code,
@@ -82,8 +80,6 @@ const Lobby = () => {
 	}
 
 	const closeRoom = async () => {
-		if (!room) return
-
 		const collRef = collection(firestore, "rooms")
 		const docs = await getDocs(
 			query(collRef, where("code", "==", room.code)),
@@ -102,9 +98,31 @@ const Lobby = () => {
 		navigate("/")
 	}
 
-	const leaveRoom = async() => {
-		console.log("leave room")
-		// navigate("/")
+	const leaveRoom = async () => {
+		const collRef = collection(firestore, "rooms")
+		const docs = await getDocs(
+			query(collRef, where("code", "==", room.code)),
+		)
+		if (docs.docs.length !== 1) {
+			toast({
+				title: "Error",
+				description: "Could not find the room you were looking for",
+				status: "error",
+				duration: 5000,
+				isClosable: true,
+			})
+		}
+
+		await setDoc(
+			doc(collRef, docs.docs[0].id),
+			{
+				scores: {
+					[room.username]: deleteField(),
+				},
+			},
+			{ merge: true },
+		)
+		navigate("/")
 	}
 
 	return (
@@ -165,7 +183,9 @@ const Lobby = () => {
 				bgColor="hsl(0, 70%, 53%)"
 				_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
 				_active={{ bgColor: "hsl(0, 70%, 40%)" }}
-				onClick={room?.owner === room?.username ? closeRoom : leaveRoom}>
+				onClick={
+					room?.owner === room?.username ? closeRoom : leaveRoom
+				}>
 				{room?.owner === room?.username ? "Close room" : "Leave room"}
 			</Button>
 		</Center>
