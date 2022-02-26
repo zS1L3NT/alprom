@@ -1,14 +1,34 @@
-import React from 'react'
-import LetterBox from '../components/LetterBox'
+import { Center, Grid, SimpleGrid } from "@chakra-ui/react"
+import React from "react"
+import LetterBox from "../components/LetterBox"
 
 const Game = () => {
-  return (
-	<>
-		<div>Game</div>
+	const testArray = Array(30).fill(0)
 
-		<LetterBox />
-	</>
-  )
+	const wordArray = [
+		["B", "A", "L", "L", "S"],
+		["T", "E", "S", "T", "S"],
+	]
+
+	return (
+		<>
+			<div>Game</div>
+
+			<Center>
+				<Grid templateColumns="repeat(5, min-content)" gap={1.5}>
+					{Array(30)
+						.fill(0)
+						.map((_, i) => (
+							<LetterBox
+								key={i}
+								state={testArray[i]}
+								letter={wordArray[Math.floor(i / 5)]?.[i % 5]}
+							/>
+						))}
+				</Grid>
+			</Center>
+		</>
+	)
 }
 
 export default Game
