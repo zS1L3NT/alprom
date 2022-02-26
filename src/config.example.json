@@ -1,0 +1,9 @@
+{
+	"firebase": {
+		"service_account": {
+			"projectId": "",
+			"privateKey": "",
+			"clientEmail": ""
+		}
+	}
+}

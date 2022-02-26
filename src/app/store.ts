@@ -1,9 +1,9 @@
 import letters from "./slices/letters"
-import metadata from "./slices/metadata"
+import room from "./slices/room"
 import { configureStore } from "@reduxjs/toolkit"
 
 export const store = configureStore({
-	reducer: { letters, metadata },
+	reducer: { letters, room },
 })
 
 export type RootState = ReturnType<typeof store.getState>
