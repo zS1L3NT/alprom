@@ -10,6 +10,14 @@ const theme = extendTheme({
 		heading: "Outfit, sans-serif",
 		body: "Outfit, sans-serif",
 	},
+	styles: {
+		global: {
+			"html, body": {
+				color: "hsl(0, 0%, 95%)",
+				bg: "hsl(240, 3%, 7%)",
+			},
+		},
+	},
 })
 
 ReactDOM.render(
