@@ -29,13 +29,15 @@ import {
 
 const Home = () => {
 	const [username, setUsername] = useState("")
-	const [roomId, setRoomId] = useState(0)
+	const [roomId, setRoomId] = useState<number | null>(null)
 	const dispatch = useAppDispatch()
 
 	const navigate = useNavigate()
 
 	useEffect(() => {
-		dispatch(updateRoom({ code: roomId, username }))
+		if (roomId) {
+			dispatch(updateRoom({ code: roomId, username }))
+		}
 	}, [username, roomId])
 
 	const createRoom = async () => {
