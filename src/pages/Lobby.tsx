@@ -1,3 +1,10 @@
+import React, { useEffect } from "react"
+import { collection, onSnapshot, query, where } from "firebase/firestore"
+import { firestore } from "../firebase"
+import { onRoomUpdate } from "../app/slices/room"
+import { useAppDispatch } from "../hooks/useAppDispatch"
+import { useAppSelector } from "../hooks/useAppSelector"
+import { useNavigate } from "react-router-dom"
 import {
 	Box,
 	Button,
@@ -9,15 +16,28 @@ import {
 	Text,
 	VStack,
 } from "@chakra-ui/react"
-import React from "react"
-import { useNavigate } from "react-router-dom"
-import { useAppSelector } from "../hooks/useAppSelector"
 
 const Lobby = () => {
+	const dispatch = useAppDispatch()
 	const navigate = useNavigate()
-	const roomId = useAppSelector(state => state.metadata?.code)
+	const roomId = useAppSelector(state => state.room?.code)
 
 	const users = ["John", "Jane", "Jim", "Jill", "Jack", "Bob", "Bobby", "Eve"]
+
+	useEffect(() => {
+		if (!roomId) return
+
+		const unsub = onSnapshot(
+			query(collection(firestore, "rooms"), where("code", "==", roomId)),
+			doc => {
+				if (doc.docs.length === 1) {
+					dispatch(onRoomUpdate(doc.docs[0]!.data()))
+				}
+			},
+		)
+
+		return unsub
+	}, [roomId])
 
 	return (
 		<Center flexDir="column">
