@@ -1,6 +1,7 @@
-import { Center, Grid, SimpleGrid } from "@chakra-ui/react"
 import React from "react"
 import LetterBox from "../components/LetterBox"
+import Keyboard from "../components/Keyboard"
+import { Center, Grid, SimpleGrid } from "@chakra-ui/react"
 
 const Game = () => {
 	const testArray = Array(30).fill(0)
@@ -24,6 +25,7 @@ const Game = () => {
 						))}
 				</Grid>
 			</Center>
+			<Keyboard></Keyboard>
 		</>
 	)
 }

@@ -23,8 +23,16 @@ const theme = extendTheme({
 			},
 		},
 	},
+	components: {
+		Button: {
+			baseStyle: {
+				_focus: {
+					boxShadow: "none",
+				},
+			},
+		},
+	},
 })
-
 
 ReactDOM.render(
 	<React.StrictMode>
