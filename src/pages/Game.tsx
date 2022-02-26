@@ -1,12 +1,16 @@
 import Keyboard from "../components/Keyboard"
 import LetterBox from "../components/LetterBox"
-import { Box, Center, Grid, SimpleGrid, VStack } from "@chakra-ui/react"
+import { Box, Center, Grid, SimpleGrid, toast, useToast, VStack } from "@chakra-ui/react"
 import { nextRow, popLetter, pushLetter } from "../app/slices/letters"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useEffect, useState } from "react"
 
 import { wordList } from "../dictionary"
+import { onSnapshot, query, collection, where } from "firebase/firestore"
+import { onRoomUpdate } from "../app/slices/room"
+import { firestore } from "../firebase"
+import { useNavigate } from "react-router-dom"
 
 const Game = () => {
 	const dispatch = useAppDispatch()
@@ -74,11 +78,40 @@ const Game = () => {
 			],
 		},
 	}
+	const toast = useToast()
+	const navigate = useNavigate()
 
 	// get data from redux
 	const wordArrays = useAppSelector(state => state.letters)
-	const playersState: any = useAppSelector(state => state.room)
-	console.log("players state",playersState)
+	const room = useAppSelector(state => state.room)
+	console.log("players state",room)
+
+	useEffect(() => {
+		const unsub = onSnapshot(
+			query(
+				collection(firestore, "rooms"),
+				where("code", "==", room?.code),
+			),
+			doc => {
+				if (doc.docs.length === 1) {
+					dispatch(onRoomUpdate(doc.docs[0]!.data()))
+				} else {
+					toast({
+						title: "Error",
+						description: "Room closed!!",
+						status: "error",
+						duration: 2500,
+						isClosable: true,
+						onCloseComplete: () => {
+							navigate("/")
+						},
+					})
+				}
+			},
+		)
+
+		return unsub
+	}, [room?.code])
 
 	useEffect(() => {
 		document.addEventListener("keydown", event => {
@@ -116,9 +149,9 @@ const Game = () => {
 						rowGap={8}
 						paddingRight={8}>
 						{/* map player scores dictionary to 6x6 grid */}
-						{Object.keys(playersState.scores).map((key, index) => {
+						{Object.keys(room.scores || {} ).map((key, index) => {
 							// get each player's guesses
-							var guessesArr: any = playersState.scores[key].guesses
+							var guessesArr = room.scores![key].guesses
 							return (
 								<Grid
 									key={index}

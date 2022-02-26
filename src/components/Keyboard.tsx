@@ -67,6 +67,7 @@ const Keyboard = () => {
 					))}
 				</HStack>
 				<HStack spacing={1.5}>
+					{/* TODO: Enter key updates current player's firestore value */}
 					<Button
 						h="60px"
 						w="60px"
