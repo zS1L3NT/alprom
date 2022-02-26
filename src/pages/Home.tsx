@@ -14,16 +14,20 @@ import {
 import { useEffect, useState } from "react"
 import { CgEnter } from "react-icons/cg"
 import { useNavigate } from "react-router-dom"
+import { useAppDispatch } from "../hooks/useAppDispatch"
+import { useAppSelector } from "../hooks/useAppSelector"
+import { updateRoom } from "../app/slices/room"
 
 const Home = () => {
 	const [username, setUsername] = useState("")
-	const [roomId, setRoomId] = useState("")
+	const [roomId, setRoomId] = useState(0)
+	const dispatch = useAppDispatch()
 
 	const navigate = useNavigate()
 
-	// useEffect(() => {
-	// 	console.table({ username, roomId })
-	// })
+	useEffect(() => {
+		dispatch(updateRoom({ code: roomId, username: username }))
+	}, [username, roomId])
 
 	return (
 		<Center display="flex" flexDirection="column" gap={2.5}>
@@ -38,7 +42,6 @@ const Home = () => {
 				with your friends and find out who is the real Wordle master!
 			</Text>
 			<br />
-
 			<FormControl isRequired size="lg" w="lg">
 				<FormLabel htmlFor="username">Username</FormLabel>
 				<Input
@@ -61,8 +64,9 @@ const Home = () => {
 				</FormLabel>
 				<InputGroup size="lg" w="lg" variant="filled">
 					<Input
+						type="number"
 						placeholder="Enter the room code here to join!"
-						onChange={e => setRoomId(e.target.value)}
+						onChange={e => setRoomId(+e.target.value)}
 					/>
 					<InputRightElement>
 						<IconButton
@@ -73,7 +77,7 @@ const Home = () => {
 							onClick={() => {
 								navigate("/lobby")
 							}}>
-							<CgEnter fontSize="1.25em"/>
+							<CgEnter fontSize="1.25em" />
 						</IconButton>
 					</InputRightElement>
 				</InputGroup>
