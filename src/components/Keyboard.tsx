@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
 	Button,
 	Square,
@@ -15,7 +15,6 @@ import Key from "./Key"
 type KeysData = { letter: string; state: 0 | 1 | 2 | 3 }[]
 
 const Keyboard = () => {
-	const [asd, setAsd] = useState<0 | 1 | 2 | 3>(0)
 	const keysmap = [
 		{ letter: "Q", state: 0 },
 		{ letter: "W", state: 0 },
@@ -44,6 +43,12 @@ const Keyboard = () => {
 		{ letter: "N", state: 0 },
 		{ letter: "M", state: 0 },
 	] as KeysData
+
+	useEffect(() => {
+		document.addEventListener("keydown", event => {
+			console.table(event.key)
+		})
+	})
 
 	return (
 		<>

@@ -26,10 +26,6 @@ const Key = (props: KeyProps) => {
 		}
 	}, [props.state])
 
-	useEffect(() => {
-		console.log(color, props)
-	}, [color, props])
-
 	return (
 		<>
 			<Button
