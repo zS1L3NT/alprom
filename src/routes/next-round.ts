@@ -33,7 +33,7 @@ export const POST: RequestHandler = async (req) => {
 			}
 		}
 	}
-	const { serverSecret } = doc.docs[0]!.data()
+	const { server_secret } = doc.docs[0]!.data()
 
 	doc = await db.collection("rooms").where("code", "==", code).get()
 	if (doc.docs.length !== 1) {
@@ -71,7 +71,7 @@ export const POST: RequestHandler = async (req) => {
 		return {
 			status: 200,
 			data: {
-				word: encryptAes(serverSecret, newWord)
+				word: encryptAes(server_secret, newWord)
 			}
 		}
 	}
@@ -100,7 +100,7 @@ export const POST: RequestHandler = async (req) => {
 		return {
 			status: 200,
 			data: {
-				word: encryptAes(serverSecret, newWord)
+				word: encryptAes(server_secret, newWord)
 			}
 		}
 	}
@@ -117,7 +117,7 @@ export const POST: RequestHandler = async (req) => {
 	return {
 		status: 200,
 		data: {
-			word: encryptAes(serverSecret, newWord)
+			word: encryptAes(server_secret, newWord)
 		}
 	}
 }
