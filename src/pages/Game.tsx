@@ -8,7 +8,6 @@ import { useEffect, useState } from "react"
 
 const Game = () => {
 	const dispatch = useAppDispatch()
-	const [currentRow, setCurrentRow] = useState(0)
 
 	const alphabet = [
 		"a",
@@ -117,13 +116,14 @@ const Game = () => {
 							const guesses = dummyData[key].guesses
 							return (
 								<Grid
+									key={index}
 									templateColumns="repeat(5, min-content)"
 									gap={1.5}>
 									{Array(30)
 										.fill(0)
 										.map((_, i) => (
 											<LetterBox
-												key={i}
+												key={`${index}-${i}`}
 												state={guesses[i]}
 												letter={wordArray[i]}
 												isSmall={true}

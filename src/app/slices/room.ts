@@ -4,6 +4,7 @@ type RoomData = {
 	username: string
 	owner: string | null
 	code: number | null
+	word: string | null
 	scores: Record<string, {
 		points: number
 		round: number
@@ -20,23 +21,28 @@ const slice = createSlice({
 		scores: {}
 	} as RoomData,
 	reducers: {
+		setWord: (state, action: PayloadAction<string>) => {
+			return {
+				...state,
+				word: action.payload
+			}
+		},
 		updateRoom: (state, action: PayloadAction<{ code: number | null; username: string }>) => {
 			return {
 				...state,
-				code: action.payload.code,
-				username: action.payload.username
+				...action.payload
 			}
 		},
 		onRoomUpdate: (state, action: PayloadAction<any>) => {
 			return {
+				...state,
 				owner: action.payload.owner,
 				code: action.payload.code,
-				username: state.username,
 				scores: action.payload.scores
 			}
 		}
 	}
 })
 
-export const { updateRoom, onRoomUpdate } = slice.actions
+export const { setWord, updateRoom, onRoomUpdate } = slice.actions
 export default slice.reducer
