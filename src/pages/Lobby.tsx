@@ -12,6 +12,7 @@ import {
 	IconButton,
 	ListItem,
 	OrderedList,
+	Skeleton,
 	Spacer,
 	Text,
 	VStack,
@@ -45,9 +46,11 @@ const Lobby = () => {
 				<Text fontSize="4xl" fontWeight="semibold">
 					Room Id
 				</Text>
-				<Text fontSize="3xl" fontWeight="semibold">
-					{roomId}
-				</Text>
+				<Skeleton isLoaded={roomId !== undefined}>
+					<Text fontSize="3xl" fontWeight="semibold">
+						{roomId ? roomId : "000000"}
+					</Text>
+				</Skeleton>
 			</VStack>
 			<VStack mb="5em">
 				<Text
