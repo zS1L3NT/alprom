@@ -4,7 +4,7 @@ import produce from "immer"
 type LettersData = { letter: string, state: number }[]
 
 const slice = createSlice({
-	name: "keys",
+	name: "letters",
 	initialState: Array(30).fill({ letter: "", state: 0 }) as LettersData,
 	reducers: {
 		backspace: (state) => {
