@@ -6,6 +6,11 @@ import { background, ChakraProvider, extendTheme } from "@chakra-ui/react"
 import { BrowserRouter } from "react-router-dom"
 
 const theme = extendTheme({
+	colors: {
+		correct: "hsl(115, 29%, 43%)",
+		present: "hsl(49, 51%, 47%)",
+		absent: "hsl(240, 2%, 23%)",
+	},
 	fonts: {
 		heading: "Outfit, sans-serif",
 		body: "Outfit, sans-serif",
@@ -19,6 +24,7 @@ const theme = extendTheme({
 		},
 	},
 })
+
 
 ReactDOM.render(
 	<React.StrictMode>
