@@ -19,4 +19,5 @@ const slice = createSlice({
 	}
 })
 
+export const { backspace } = slice.actions
 export default slice.reducer
