@@ -21,6 +21,7 @@ import {
 	OrderedList,
 	Skeleton,
 	Text,
+	Tooltip,
 	useToast,
 	VStack,
 } from "@chakra-ui/react"
@@ -101,6 +102,11 @@ const Lobby = () => {
 		navigate("/")
 	}
 
+	const leaveRoom = async() => {
+		console.log("leave room")
+		// navigate("/")
+	}
+
 	return (
 		<Center flexDir="column">
 			<VStack mb="2em" spacing={0}>
@@ -135,24 +141,32 @@ const Lobby = () => {
 					))}
 				</OrderedList>
 			</VStack>
-			<Button
-				size="lg"
-				w="lg"
-				mb={5}
-				bgColor="correct"
-				_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
-				_active={{ bgColor: "hsl(115, 29%, 30%)" }}
-				onClick={startGame}>
-				Start Game
-			</Button>
+			<Tooltip
+				label="Only the room owner can start the game"
+				shouldWrapChildren
+				mb={2}
+				placement="top"
+				isDisabled={room?.owner === room?.username}>
+				<Button
+					size="lg"
+					w="lg"
+					mb={5}
+					isDisabled={room?.owner !== room?.username}
+					bgColor="correct"
+					_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
+					_active={{ bgColor: "hsl(115, 29%, 30%)" }}
+					onClick={startGame}>
+					Start Game
+				</Button>
+			</Tooltip>
 			<Button
 				size="md"
 				w="xs"
 				bgColor="hsl(0, 70%, 53%)"
 				_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
 				_active={{ bgColor: "hsl(0, 70%, 40%)" }}
-				onClick={closeRoom}>
-				Close Room
+				onClick={room?.owner === room?.username ? closeRoom : leaveRoom}>
+				{room?.owner === room?.username ? "Close room" : "Leave room"}
 			</Button>
 		</Center>
 	)
