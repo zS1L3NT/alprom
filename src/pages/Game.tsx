@@ -1,6 +1,7 @@
 import getWordStates from "../functions/getWordStates"
 import Keyboard from "../components/Keyboard"
 import LetterBox from "../components/LetterBox"
+import { Center, Grid, SimpleGrid, useToast } from "@chakra-ui/react"
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore"
 import { firestore } from "../firebase"
 import { onRoomUpdate, setWord } from "../app/slices/room"
@@ -15,16 +16,6 @@ import {
 	pushLetter,
 	updateColors,
 } from "../app/slices/letters"
-import {
-	Alert,
-	AlertDescription,
-	AlertIcon,
-	AlertTitle,
-	Center,
-	Grid,
-	SimpleGrid,
-	useToast,
-} from "@chakra-ui/react"
 
 const Game = () => {
 	const toast = useToast()

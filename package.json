@@ -1,7 +1,7 @@
 {
 	"name": "alprom",
-	"private": true,
-	"version": "0.0.0",
+	"description": "Alprom is a multiplayer version of Wordle",
+	"license": "GPL-3.0",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",

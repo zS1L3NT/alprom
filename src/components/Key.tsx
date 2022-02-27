@@ -1,5 +1,5 @@
-import React, { useEffect, useLayoutEffect, useState } from "react"
-import { Box, Square, Button } from "@chakra-ui/react"
+import { Button } from "@chakra-ui/react"
+import { useLayoutEffect, useState } from "react"
 
 interface KeyProps {
 	letter: string
@@ -27,18 +27,16 @@ const Key = (props: KeyProps) => {
 	}, [props.state])
 
 	return (
-		<>
-			<Button
-				w="40px"
-				h="60px"
-				borderRadius={2}
-				border="1px"
-				borderColor="transparent"
-				bg={color}
-				color="white">
-				{props.letter}
-			</Button>
-		</>
+		<Button
+			w="40px"
+			h="60px"
+			borderRadius={2}
+			border="1px"
+			borderColor="transparent"
+			bg={color}
+			color="white">
+			{props.letter}
+		</Button>
 	)
 }
 

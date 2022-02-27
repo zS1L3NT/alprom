@@ -1,9 +1,9 @@
 import getNextRound from "../functions/getNextRound"
-import React, { useEffect } from "react"
 import { firestore } from "../firebase"
 import { onRoomUpdate, setWord } from "../app/slices/room"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
 	collection,
@@ -29,7 +29,6 @@ const Lobby = () => {
 	const dispatch = useAppDispatch()
 	const navigate = useNavigate()
 	const toast = useToast()
-
 	const room = useAppSelector(state => state.room)
 
 	useEffect(() => {

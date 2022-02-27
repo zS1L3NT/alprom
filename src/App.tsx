@@ -1,9 +1,8 @@
-import React from "react"
-import { Route, Routes } from "react-router-dom"
-import Navbar from "./components/Navbar"
 import Game from "./pages/Game"
-import Lobby from "./pages/Lobby"
 import Home from "./pages/Home"
+import Lobby from "./pages/Lobby"
+import Navbar from "./components/Navbar"
+import { Route, Routes } from "react-router-dom"
 
 const App = () => {
 	return (

@@ -2,8 +2,8 @@ import App from "./App"
 import React from "react"
 import ReactDOM from "react-dom"
 import store from "./app/store"
-import { background, ChakraProvider, extendTheme, type ThemeConfig } from "@chakra-ui/react"
 import { BrowserRouter } from "react-router-dom"
+import { ChakraProvider, extendTheme, ThemeConfig } from "@chakra-ui/react"
 import { Provider as ReduxProvider } from "react-redux"
 import "./index.css"
 
@@ -12,7 +12,7 @@ const config: ThemeConfig = {
 	useSystemColorMode: false,
 }
 
-const theme = extendTheme({ 
+const theme = extendTheme({
 	config,
 	colors: {
 		correct: "hsl(115, 29%, 43%)",
