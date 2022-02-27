@@ -23,11 +23,11 @@ const Game = () => {
 	const dispatch = useAppDispatch()
 	const [isValid, setIsValid] = useState(true)
 	const [currentWord, setCurrentWord] = useState("")
+	const currentRow = useAppSelector(state => state.letters.row)
 	const currentWordRaw = useAppSelector(
-		state => state.letters.data[useAppSelector(state => state.letters.row)],
+		state => state.letters.data[currentRow],
 	)
-	const currentWordList: string[] = []
-
+	const wordArrays = useAppSelector(state => state.letters)
 	const alphabet = [
 		"a",
 		"b",
@@ -93,10 +93,12 @@ const Game = () => {
 	}
 
 	useEffect(() => {
-		currentWordRaw.map(wordList => {
-			currentWordList.push(wordList.letter)
-		})
-		setCurrentWord(currentWordList.join("").toLowerCase())
+		setCurrentWord(
+			currentWordRaw
+				.map(l => l.letter)
+				.join("")
+				.toLowerCase(),
+		)
 	}, [currentWordRaw])
 
 	useEffect(() => {
@@ -105,20 +107,27 @@ const Game = () => {
 		}
 	}, [currentWord])
 
-	const wordArrays = useAppSelector(state => state.letters)
+	// const checkWord = () => {
+	// console.log(currentWordList.join("").toLowerCase())
+	// console.table(currentWordList)
+	// console.table(currentWordRaw)
+	// }
 
 	useEffect(() => {
-		document.addEventListener("keydown", event => {
+		const handler = (event: KeyboardEvent) => {
 			switch (event.key) {
 				case "Backspace":
 					dispatch(popLetter())
 					setIsValid(true)
 					break
 				case "Enter":
-					dispatch(nextRow())
+					// dispatch(nextRow())
+					// checkWord()
+
 					if (isValid) {
-						console.log(currentWord)
 						// code to check against answer word
+
+						console.log(currentWord)
 					}
 					// Submits the word
 					setIsValid(true)
@@ -134,8 +143,13 @@ const Game = () => {
 					}
 					break
 			}
-		})
-	}, [])
+		}
+		document.addEventListener("keydown", handler)
+
+		return () => {
+			document.removeEventListener("keydown", handler)
+		}
+	}, [currentWord])
 
 	return (
 		<>
@@ -152,7 +166,8 @@ const Game = () => {
 							return (
 								<Grid
 									templateColumns="repeat(5, min-content)"
-									gap={1.5}>
+									gap={1.5}
+									key={index}>
 									{Array(30)
 										.fill(0)
 										.map((_, i) => (
