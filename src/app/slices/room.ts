@@ -36,9 +36,9 @@ const slice = createSlice({
 		onRoomUpdate: (state, action: PayloadAction<any>) => {
 			return {
 				...state,
-				owner: action.payload.owner,
-				code: action.payload.code,
-				scores: action.payload.scores
+				owner: action.payload.owner || state.owner,
+				code: action.payload.code || state.code,
+				scores: action.payload.scores || state.scores
 			}
 		}
 	}

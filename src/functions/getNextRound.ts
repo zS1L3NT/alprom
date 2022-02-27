@@ -29,9 +29,7 @@ export default async (data: { code: number, username: string }): Promise<{ word:
 		throw new Error("Failed to get next round from the server")
 	}
 
-	const word = new SimpleCrypto(clientSecret).decrypt(res2.data.word) as string
-
 	return {
-		word: word.toUpperCase()
+		word: new SimpleCrypto(clientSecret).decrypt(res2.data.word) as string
 	}
 }

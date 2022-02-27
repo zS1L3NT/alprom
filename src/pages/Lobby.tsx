@@ -10,11 +10,8 @@ import {
 	deleteDoc,
 	deleteField,
 	doc,
-	getDocs,
 	onSnapshot,
-	query,
 	setDoc,
-	where,
 } from "firebase/firestore"
 import {
 	Button,
@@ -36,14 +33,13 @@ const Lobby = () => {
 	const room = useAppSelector(state => state.room)
 
 	useEffect(() => {
+		if (!room.code) return
+
 		const unsub = onSnapshot(
-			query(
-				collection(firestore, "rooms"),
-				where("code", "==", room?.code),
-			),
+			doc(collection(firestore, "rooms"), `${room.code}`),
 			doc => {
-				if (doc.docs.length === 1) {
-					dispatch(onRoomUpdate(doc.docs[0]!.data()))
+				if (doc.exists()) {
+					dispatch(onRoomUpdate(doc.data()))
 				} else {
 					toast({
 						title: "Error",
@@ -80,49 +76,49 @@ const Lobby = () => {
 	}
 
 	const closeRoom = async () => {
-		const collRef = collection(firestore, "rooms")
-		const docs = await getDocs(
-			query(collRef, where("code", "==", room.code)),
-		)
-		if (docs.docs.length !== 1) {
+		try {
+			await deleteDoc(doc(collection(firestore, "rooms"), `${room.code}`))
+			navigate("/")
+		} catch (err) {
+			console.error(err)
 			toast({
 				title: "Error",
 				description: "Could not find the room you were looking for",
 				status: "error",
 				duration: 5000,
 				isClosable: true,
+				onCloseComplete: () => {
+					navigate("/")
+				},
 			})
 		}
-
-		await deleteDoc(doc(collRef, docs.docs[0].id))
-		navigate("/")
 	}
 
 	const leaveRoom = async () => {
-		const collRef = collection(firestore, "rooms")
-		const docs = await getDocs(
-			query(collRef, where("code", "==", room.code)),
-		)
-		if (docs.docs.length !== 1) {
+		try {
+			await setDoc(
+				doc(collection(firestore, "rooms"), `${room.code}`),
+				{
+					scores: {
+						[room.username]: deleteField(),
+					},
+				},
+				{ merge: true },
+			)
+			navigate("/")
+		} catch (err) {
+			console.error(err)
 			toast({
 				title: "Error",
 				description: "Could not find the room you were looking for",
 				status: "error",
 				duration: 5000,
 				isClosable: true,
+				onCloseComplete: () => {
+					navigate("/")
+				},
 			})
 		}
-
-		await setDoc(
-			doc(collRef, docs.docs[0]!.id),
-			{
-				scores: {
-					[room.username]: deleteField(),
-				},
-			},
-			{ merge: true },
-		)
-		navigate("/")
 	}
 
 	return (
