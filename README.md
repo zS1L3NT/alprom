@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/github/license/TechSupportz/alprom?style=for-the-badge) ![Languages](https://img.shields.io/github/languages/count/TechSupportz/alprom?style=for-the-badge) ![Top Language](https://img.shields.io/github/languages/top/TechSupportz/alprom?style=for-the-badge) ![Commit Activity](https://img.shields.io/github/commit-activity/y/TechSupportz/alprom?style=for-the-badge) ![Last commit](https://img.shields.io/github/last-commit/TechSupportz/alprom?style=for-the-badge)
 
-Alprom is a multiplayer Wordle game that @jyorien, @zS1L3NT, @TechSupportz and @PuttTim built as our submittable for the [iNTUition v8](https://intuition-v8.devpost.com/) Hackathon.
+Alprom is a multiplayer Wordle game that [@jyorien](https://github.com/jyorien), [@zS1L3NT](https://github.com/zS1L3NT), [@TechSupportz](https://github.com/TechSupportz) and [@PuttTim](https://github.com/PuttTim) built as our submittable for the [iNTUition v8](https://intuition-v8.devpost.com/) Hackathon.
 
 ## Motivation
 
