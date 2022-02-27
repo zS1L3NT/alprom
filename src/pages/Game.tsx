@@ -1,15 +1,37 @@
 import Keyboard from "../components/Keyboard"
 import LetterBox from "../components/LetterBox"
-import { Box, Center, Grid, SimpleGrid, VStack } from "@chakra-ui/react"
-import { nextRow, popLetter, pushLetter } from "../app/slices/letters"
+import { collection, onSnapshot, query, where } from "firebase/firestore"
+import { firestore } from "../firebase"
+import { onRoomUpdate } from "../app/slices/room"
+import { popLetter, pushLetter } from "../app/slices/letters"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useEffect, useState } from "react"
-
+import { useNavigate } from "react-router-dom"
 import { wordList } from "../dictionary"
+import {
+	Alert,
+	AlertDescription,
+	AlertIcon,
+	AlertTitle,
+	Center,
+	Grid,
+	SimpleGrid,
+	useToast,
+} from "@chakra-ui/react"
 
 const Game = () => {
+	const toast = useToast()
+	const navigate = useNavigate()
 	const dispatch = useAppDispatch()
+	const room = useAppSelector(state => state.room)
+	const currentRow = useAppSelector(state => state.letters.row)
+	const currentWordRaw = useAppSelector(
+		state => state.letters.data[currentRow],
+	)
+	const wordArrays = useAppSelector(state => state.letters)
+	const [isValid, setIsValid] = useState(true)
+	const [currentWord, setCurrentWord] = useState("")
 
 	const alphabet = [
 		"a",
@@ -40,53 +62,64 @@ const Game = () => {
 		"z",
 	]
 
-	const dummyData: any = {
-		putt: {
-			points: 0,
-			round: 0,
-			guesses: [
-				0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0,
-			],
-		},
-		joey: {
-			points: 0,
-			round: 0,
-			guesses: [
-				0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0,
-			],
-		},
-		zec: {
-			points: 0,
-			round: 0,
-			guesses: [
-				0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0,
-			],
-		},
-		nitish: {
-			points: 0,
-			round: 0,
-			guesses: [
-				0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0,
-			],
-		},
-	}
-
-	const wordArrays = useAppSelector(state => state.letters)
+	useEffect(() => {
+		setCurrentWord(
+			currentWordRaw
+				.map(l => l.letter)
+				.join("")
+				.toLowerCase(),
+		)
+	}, [currentWordRaw])
 
 	useEffect(() => {
-		document.addEventListener("keydown", event => {
+		const unsub = onSnapshot(
+			query(
+				collection(firestore, "rooms"),
+				where("code", "==", room?.code),
+			),
+			doc => {
+				if (doc.docs.length === 1) {
+					dispatch(onRoomUpdate(doc.docs[0]!.data()))
+				} else {
+					toast({
+						title: "Error",
+						description: "Room closed!!",
+						status: "error",
+						duration: 2500,
+						isClosable: true,
+						onCloseComplete: () => {
+							navigate("/")
+						},
+					})
+				}
+			},
+		)
+
+		return unsub
+	}, [room?.code])
+
+	useEffect(() => {
+		if (currentWord.length == 5) {
+			setIsValid(wordList.includes(currentWord))
+		}
+
+		const handler = (event: KeyboardEvent) => {
 			switch (event.key) {
 				case "Backspace":
 					dispatch(popLetter())
+					setIsValid(true)
 					break
 				case "Enter":
-					dispatch(nextRow())
-					// Submits the word
+					// dispatch(nextRow())
+					// checkWord()
 
+					if (isValid) {
+						// code to check against answer word
+
+						console.log(currentWord)
+					}
+					// Submits the word
+					setIsValid(true)
 					break
 				default:
 					if (alphabet.includes(event.key.toLowerCase())) {
@@ -99,58 +132,80 @@ const Game = () => {
 					}
 					break
 			}
-		})
-	}, [])
+		}
+
+		document.addEventListener("keydown", handler)
+
+		return () => {
+			document.removeEventListener("keydown", handler)
+		}
+	}, [currentWord])
+
 	return (
-		<>
-			<Center>
-				<SimpleGrid columns={2}>
-					{/* left side players */}
-					<SimpleGrid
-						columns={2}
-						columnGap={4}
-						rowGap={8}
-						paddingRight={8}>
-						{Object.keys(dummyData).map((key, index) => {
-							const guesses = dummyData[key].guesses
-							return (
-								<Grid
-									key={index}
-									templateColumns="repeat(5, min-content)"
-									gap={1.5}>
-									{Array(30)
-										.fill(0)
-										.map((_, i) => (
+		<Center>
+			<SimpleGrid columns={2}>
+				{/* left side players */}
+				<SimpleGrid
+					columns={2}
+					columnGap={4}
+					rowGap={8}
+					paddingRight={8}>
+					{/* map player scores dictionary to 6x6 grid */}
+					{Object.keys(room.scores || {}).map((key, index) => {
+						// get each player's guesses
+						var guessesArr = room.scores![key].guesses
+						return (
+							<Grid
+								key={index}
+								templateColumns="repeat(5, min-content)"
+								gap={1.5}>
+								{Array(30)
+									.fill(0)
+									.map((_, i) =>
+										guessesArr == undefined ? (
+											<></>
+										) : (
 											<LetterBox
 												key={`${index}-${i}`}
-												state={guesses[i]}
+												state={guessesArr[i]}
 												isSmall={true}
 											/>
-										))}
-								</Grid>
-							)
-						})}
-					</SimpleGrid>
+										),
+									)}
+							</Grid>
+						)
+					})}
 				</SimpleGrid>
+			</SimpleGrid>
 
-				{/* main grid and keyboard */}
-				<Center flexDirection="column" h="90vh">
-					<Grid
-						templateColumns="repeat(5, min-content)"
-						gap={1.5}
-						marginBottom={10}>
-						{wordArrays.data.flat().map((letter, index) => (
-							<LetterBox
-								key={index}
-								state={letter.state}
-								letter={letter.letter}
-							/>
-						))}
-					</Grid>
-					<Keyboard />
-				</Center>
+			{/* main grid and keyboard */}
+			<Center flexDirection="column" h="90vh">
+				{!isValid && (
+					<Alert mb={3} status="error" display="inherit">
+						<AlertIcon />
+						<AlertTitle mr={2}>
+							The word you entered doesn't exist!
+						</AlertTitle>
+						<AlertDescription>
+							Please type another word.
+						</AlertDescription>
+					</Alert>
+				)}
+				<Grid
+					templateColumns="repeat(5, min-content)"
+					gap={1.5}
+					marginBottom={5}>
+					{wordArrays.data.flat().map((letter, index) => (
+						<LetterBox
+							key={index}
+							state={letter.state}
+							letter={letter.letter}
+						/>
+					))}
+				</Grid>
+				<Keyboard />
 			</Center>
-		</>
+		</Center>
 	)
 }
 
