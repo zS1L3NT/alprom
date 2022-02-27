@@ -5,7 +5,6 @@ import { LIST, NUMBER, OBJECT, STRING, validate } from "validate-any"
 import { RequestHandler } from "../functions/withErrorHandling"
 
 const db = admin.firestore()
-let doc: admin.firestore.QuerySnapshot<admin.firestore.DocumentData>
 
 export const POST: RequestHandler = async (req) => {
 	const { success, errors, data } = validate(req.body, OBJECT({
@@ -24,8 +23,8 @@ export const POST: RequestHandler = async (req) => {
 	const { code, username, client_key_data } = data!
 	const clientKey = Buffer.from(client_key_data).toString("hex")
 
-	doc = await db.collection("keys").where("client_key", "==", clientKey).get()
-	if (doc.docs.length !== 1) {
+	const doc1 = await db.collection("keys").where("client_key", "==", clientKey).get()
+	if (doc1.docs.length !== 1) {
 		return {
 			status: 400,
 			data: {
@@ -33,11 +32,11 @@ export const POST: RequestHandler = async (req) => {
 			}
 		}
 	}
-	const { server_secret } = doc.docs[0]!.data()
-	await db.collection("keys").doc(doc.docs[0]!.id).delete()
+	const { server_secret } = doc1.docs[0]!.data()
+	await db.collection("keys").doc(doc1.docs[0]!.id).delete()
 
-	doc = await db.collection("rooms").where("code", "==", code).get()
-	if (doc.docs.length !== 1) {
+	const doc2 = await db.collection("rooms").doc(`${code}`).get()
+	if (!doc2.exists) {
 		return {
 			status: 400,
 			data: {
@@ -46,7 +45,7 @@ export const POST: RequestHandler = async (req) => {
 		}
 	}
 
-	const roomData = doc.docs[0]!.data() as InfiniteRoom
+	const roomData = doc2.data() as InfiniteRoom
 	if (!(username in roomData.scores)) {
 		return {
 			status: 400,
@@ -57,7 +56,7 @@ export const POST: RequestHandler = async (req) => {
 	}
 
 	const newWord = wordlist[Math.floor(Math.random() * wordlist.length)]!
-	const roomDoc = db.collection("rooms").doc(doc.docs[0]!.id)
+	const roomDoc = db.collection("rooms").doc(`${code}`)
 
 	const userData = roomData.scores[username]!
 	if (roomData.words.length === 0) {
