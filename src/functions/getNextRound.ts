@@ -3,7 +3,7 @@ import crypto from "crypto-browserify"
 import { useTryAsync } from "no-try"
 
 export default async (data: { code: number, username: string }): Promise<{ word: string }> => {
-	const axios = Axios.create({ baseURL: "https://alprom.loca.lt" })
+	const axios = Axios.create({ baseURL: "https://alprom.zectan.com" })
 
 	const clientDh = crypto.createDiffieHellman("modp15")
 	const clientKey = clientDh.generateKeys()
