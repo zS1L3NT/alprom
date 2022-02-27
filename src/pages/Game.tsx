@@ -1,14 +1,20 @@
+import getWordStates from "../functions/getWordStates"
 import Keyboard from "../components/Keyboard"
 import LetterBox from "../components/LetterBox"
-import { collection, onSnapshot, query, where } from "firebase/firestore"
+import { collection, doc, onSnapshot, setDoc } from "firebase/firestore"
 import { firestore } from "../firebase"
 import { onRoomUpdate } from "../app/slices/room"
-import { popLetter, pushLetter } from "../app/slices/letters"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { wordList } from "../dictionary"
+import {
+	nextRow,
+	popLetter,
+	pushLetter,
+	updateColors,
+} from "../app/slices/letters"
 import {
 	Alert,
 	AlertDescription,
@@ -30,7 +36,7 @@ const Game = () => {
 		state => state.letters.data[currentRow],
 	)
 	const wordArrays = useAppSelector(state => state.letters)
-	const [isValid, setIsValid] = useState(true)
+	const [isValid, setIsValid] = useState<boolean | null>(null)
 	const [currentWord, setCurrentWord] = useState("")
 
 	const alphabet = [
@@ -72,14 +78,13 @@ const Game = () => {
 	}, [currentWordRaw])
 
 	useEffect(() => {
+		if (!room.code) return
+
 		const unsub = onSnapshot(
-			query(
-				collection(firestore, "rooms"),
-				where("code", "==", room?.code),
-			),
+			doc(collection(firestore, "rooms"), `${room.code}`),
 			doc => {
-				if (doc.docs.length === 1) {
-					dispatch(onRoomUpdate(doc.docs[0]!.data()))
+				if (doc.exists()) {
+					dispatch(onRoomUpdate(doc.data()))
 				} else {
 					toast({
 						title: "Error",
@@ -101,25 +106,26 @@ const Game = () => {
 	useEffect(() => {
 		if (currentWord.length == 5) {
 			setIsValid(wordList.includes(currentWord))
+		} else {
+			setIsValid(null)
 		}
+	}, [currentWord])
 
-		const handler = (event: KeyboardEvent) => {
+	useEffect(() => {
+		const handler = async (event: KeyboardEvent) => {
 			switch (event.key) {
 				case "Backspace":
 					dispatch(popLetter())
-					setIsValid(true)
 					break
 				case "Enter":
-					// dispatch(nextRow())
-					// checkWord()
-
 					if (isValid) {
 						// code to check against answer word
-
-						console.log(currentWord)
+						const states = getWordStates(currentWord, room.word!)
+						dispatch(updateColors(states))
+						dispatch(nextRow())
+					} else if (isValid === null) {
+						setIsValid(false)
 					}
-					// Submits the word
-					setIsValid(true)
 					break
 				default:
 					if (alphabet.includes(event.key.toLowerCase())) {
@@ -139,7 +145,23 @@ const Game = () => {
 		return () => {
 			document.removeEventListener("keydown", handler)
 		}
-	}, [currentWord])
+	}, [currentWord, isValid])
+
+	useEffect(() => {
+		if (!room.code) return
+
+		setDoc(
+			doc(collection(firestore, "rooms"), `${room.code}`),
+			{
+				scores: {
+					[room.username]: {
+						guesses: wordArrays.data.flat().map(d => d.state),
+					},
+				},
+			},
+			{ merge: true },
+		)
+	}, [room?.code, wordArrays.data])
 
 	return (
 		<Center>
@@ -180,7 +202,7 @@ const Game = () => {
 
 			{/* main grid and keyboard */}
 			<Center flexDirection="column" h="90vh">
-				{!isValid && (
+				{isValid === false && (
 					<Alert mb={3} status="error" display="inherit">
 						<AlertIcon />
 						<AlertTitle mr={2}>

@@ -1,18 +1,10 @@
 import { CgEnter } from "react-icons/cg"
+import { collection, doc, getDoc, setDoc } from "firebase/firestore"
 import { firestore } from "../firebase"
 import { updateRoom } from "../app/slices/room"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-	addDoc,
-	collection,
-	doc,
-	getDocs,
-	query,
-	setDoc,
-	where,
-} from "firebase/firestore"
 import {
 	Button,
 	Center,
@@ -52,7 +44,7 @@ const Home = () => {
 		}
 
 		const roomId = Math.floor(Math.random() * (99999 - 10000)) + 10000
-		await addDoc(collection(firestore, "rooms"), {
+		await setDoc(doc(collection(firestore, "rooms"), `${roomId}`), {
 			owner: username,
 			code: roomId,
 			words: [],
@@ -78,9 +70,10 @@ const Home = () => {
 			return
 		}
 
-		const collRef = collection(firestore, "rooms")
-		const docs = await getDocs(query(collRef, where("code", "==", roomId)))
-		if (docs.docs.length !== 1) {
+		const res = await getDoc(
+			doc(collection(firestore, "rooms"), `${roomId}`),
+		)
+		if (!res.exists()) {
 			toast({
 				title: "Error",
 				description: "Room does not exist",
@@ -88,7 +81,7 @@ const Home = () => {
 				duration: 2500,
 				isClosable: true,
 			})
-		} else if (username in docs.docs[0]!.data().scores) {
+		} else if (username in res.data().scores) {
 			toast({
 				title: "Error",
 				description: "Username not available",
@@ -97,9 +90,8 @@ const Home = () => {
 				isClosable: true,
 			})
 		} else {
-			const docRef = doc(collRef, docs.docs[0]!.id)
 			setDoc(
-				docRef,
+				doc(collection(firestore, "rooms"), `${roomId}`),
 				{
 					scores: {
 						[username]: {
