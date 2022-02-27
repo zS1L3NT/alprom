@@ -1,17 +1,6 @@
-import React, { useEffect, useState } from "react"
-
-import {
-	Button,
-	Square,
-	HStack,
-	Box,
-	VStack,
-	Icon,
-	Center,
-} from "@chakra-ui/react"
-import { FaBackspace } from "react-icons/fa"
-
 import Key from "./Key"
+import { Button, HStack, Icon, VStack } from "@chakra-ui/react"
+import { FaBackspace } from "react-icons/fa"
 
 type KeysData = { letter: string; state: 0 | 1 | 2 | 3 }[]
 
@@ -46,58 +35,44 @@ const Keyboard = () => {
 	] as KeysData
 
 	return (
-		<>
-			<VStack justify="center" spacing={1.5}>
-				<HStack spacing={1.5}>
-					{keysmap.slice(0, 10).map((key, index) => (
-						<Key
-							letter={key.letter}
-							state={key.state}
-							key={index}
-						/>
-					))}
-				</HStack>
-				<HStack spacing={1.5}>
-					{keysmap.slice(10, 19).map((key, index) => (
-						<Key
-							letter={key.letter}
-							state={key.state}
-							key={index}
-						/>
-					))}
-				</HStack>
-				<HStack spacing={1.5}>
-					{/* TODO: Enter key updates current player's firestore value */}
-					<Button
-						h="60px"
-						w="60px"
-						border="1px"
-						borderColor="transparent"
-						borderRadius={2}
-						bg="hsl(200, 1%, 51%)"
-						color="white">
-						ENTER
-					</Button>
-					{keysmap.slice(19, 27).map((key, index) => (
-						<Key
-							letter={key.letter}
-							state={key.state}
-							key={index}
-						/>
-					))}
-					<Button
-						h="60px"
-						w="60px"
-						border="1px"
-						borderColor="transparent"
-						borderRadius={2}
-						bg="hsl(200, 1%, 51%)"
-						color="white">
-						<Icon boxSize={6} as={FaBackspace} />
-					</Button>
-				</HStack>
-			</VStack>
-		</>
+		<VStack justify="center" spacing={1.5}>
+			<HStack spacing={1.5}>
+				{keysmap.slice(0, 10).map((key, index) => (
+					<Key letter={key.letter} state={key.state} key={index} />
+				))}
+			</HStack>
+			<HStack spacing={1.5}>
+				{keysmap.slice(10, 19).map((key, index) => (
+					<Key letter={key.letter} state={key.state} key={index} />
+				))}
+			</HStack>
+			<HStack spacing={1.5}>
+				{/* TODO: Enter key updates current player's firestore value */}
+				<Button
+					h="60px"
+					w="60px"
+					border="1px"
+					borderColor="transparent"
+					borderRadius={2}
+					bg="hsl(200, 1%, 51%)"
+					color="white">
+					ENTER
+				</Button>
+				{keysmap.slice(19, 27).map((key, index) => (
+					<Key letter={key.letter} state={key.state} key={index} />
+				))}
+				<Button
+					h="60px"
+					w="60px"
+					border="1px"
+					borderColor="transparent"
+					borderRadius={2}
+					bg="hsl(200, 1%, 51%)"
+					color="white">
+					<Icon boxSize={6} as={FaBackspace} />
+				</Button>
+			</HStack>
+		</VStack>
 	)
 }
 

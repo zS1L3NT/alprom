@@ -21,12 +21,11 @@ import {
 } from "@chakra-ui/react"
 
 const Home = () => {
-	const [username, setUsername] = useState("")
-	const [roomId, setRoomId] = useState<number | null>(null)
 	const dispatch = useAppDispatch()
-
 	const navigate = useNavigate()
 	const toast = useToast()
+	const [username, setUsername] = useState("")
+	const [roomId, setRoomId] = useState<number | null>(null)
 
 	useEffect(() => {
 		dispatch(updateRoom({ code: roomId, username }))

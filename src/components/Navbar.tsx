@@ -1,4 +1,4 @@
-import { Box, Center, Icon, Image } from "@chakra-ui/react"
+import { Center, Image } from "@chakra-ui/react"
 import { useNavigate } from "react-router-dom"
 
 const Navbar = () => {

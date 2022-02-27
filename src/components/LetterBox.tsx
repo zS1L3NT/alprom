@@ -1,4 +1,4 @@
-import { Box, Button, Center, Square, Text } from "@chakra-ui/react"
+import { Square, Text } from "@chakra-ui/react"
 import { useLayoutEffect, useState } from "react"
 
 interface LetterBoxProps {
