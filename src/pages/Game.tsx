@@ -1,9 +1,9 @@
 import getWordStates from "../functions/getWordStates"
 import Keyboard from "../components/Keyboard"
 import LetterBox from "../components/LetterBox"
-import { collection, doc, onSnapshot, setDoc } from "firebase/firestore"
+import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore"
 import { firestore } from "../firebase"
-import { onRoomUpdate } from "../app/slices/room"
+import { onRoomUpdate, setWord } from "../app/slices/room"
 import { useAppDispatch } from "../hooks/useAppDispatch"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { useEffect, useState } from "react"
@@ -67,6 +67,18 @@ const Game = () => {
 		"y",
 		"z",
 	]
+
+	useEffect(() => {
+		if (!room.code) return
+
+		getDoc(doc(collection(firestore, "rooms"), `${room.code}`)).then(
+			doc => {
+				if (doc.exists()) {
+					dispatch(setWord(doc.data().words[0]))
+				}
+			},
+		)
+	}, [room?.code])
 
 	useEffect(() => {
 		setCurrentWord(
