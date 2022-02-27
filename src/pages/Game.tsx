@@ -110,8 +110,8 @@ const Game = () => {
 					setIsValid(true)
 					break
 				case "Enter":
-					// dispatch(nextRow())
-					// checkWord()
+					//dispatch(nextRow())
+					//checkWord()
 
 					if (isValid) {
 						// code to check against answer word
@@ -140,6 +140,19 @@ const Game = () => {
 			document.removeEventListener("keydown", handler)
 		}
 	}, [currentWord])
+
+	useEffect(() => {
+		!isValid
+			? toast({
+					id: "invalid-word-toast",
+					title: "Invalid Word",
+					description: "The word you entered doesn't exist!",
+					status: "error",
+					isClosable: true,
+					position: "top-right",
+			  })
+			: toast.close("invalid-word-toast")
+	}, [isValid])
 
 	return (
 		<Center>
@@ -180,17 +193,6 @@ const Game = () => {
 
 			{/* main grid and keyboard */}
 			<Center flexDirection="column" h="90vh">
-				{!isValid && (
-					<Alert mb={3} status="error" display="inherit">
-						<AlertIcon />
-						<AlertTitle mr={2}>
-							The word you entered doesn't exist!
-						</AlertTitle>
-						<AlertDescription>
-							Please type another word.
-						</AlertDescription>
-					</Alert>
-				)}
 				<Grid
 					templateColumns="repeat(5, min-content)"
 					gap={1.5}
