@@ -1,5 +1,5 @@
 {
-	"name": "web-node-alprom",
+	"name": "web-express-alprom",
 	"description": "Modified Wordle for NTU iNTUition",
 	"main": "dist/app.js",
 	"author": "zS1L3NT <zechariahtan144@gmail.com> (https://www.zectan.com)",
