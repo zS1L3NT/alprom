@@ -7,7 +7,7 @@ import path from "path"
 
 import { iRoute } from "./setup"
 
-const PORT = 8945
+const PORT = process.env.PORT || 8945
 const app = express()
 
 app.use(cors())
