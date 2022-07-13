@@ -1,4 +1,4 @@
-export const wordList = [
+[
 	"aahed",
 	"aalii",
 	"aargh",
@@ -12964,5 +12964,5 @@ export const wordList = [
 	"rower",
 	"artsy",
 	"rural",
-	"shave",
+	"shave"
 ]

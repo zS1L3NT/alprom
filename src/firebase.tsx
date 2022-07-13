@@ -10,10 +10,8 @@ export const firebase = initializeApp({
 	storageBucket: "innova-alprom.appspot.com",
 	messagingSenderId: "312790454055",
 	appId: "1:312790454055:web:f7545731ade118cb29e302",
-	measurementId: "G-PY1W5KFMTN",
+	measurementId: "G-PY1W5KFMTN"
 })
 
 export const firestore = getFirestore(firebase)
-export const roomsColl = collection(firestore, "rooms").withConverter(
-	Room.converter,
-)
+export const roomsColl = collection(firestore, "rooms").withConverter(Room.converter)

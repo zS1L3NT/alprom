@@ -1,125 +1,39 @@
 import { CgEnter } from "react-icons/cg"
-import { collection, doc, getDoc, setDoc } from "firebase/firestore"
-import { firestore } from "../firebase"
-import { updateRoom } from "../app/slices/room"
-import { useAppDispatch } from "../hooks/useAppDispatch"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+
 import {
-	Button,
-	Center,
-	Divider,
-	FormControl,
-	FormLabel,
-	HStack,
-	IconButton,
-	Input,
-	InputGroup,
-	InputRightElement,
-	Text,
-	useToast,
+	Button, Center, Divider, FormControl, FormLabel, HStack, IconButton, Input, InputGroup,
+	InputRightElement, Text
 } from "@chakra-ui/react"
 
 const Home = () => {
-	const dispatch = useAppDispatch()
-	const navigate = useNavigate()
-	const toast = useToast()
-	const [username, setUsername] = useState("")
-	const [roomId, setRoomId] = useState<number | null>(null)
-
-	useEffect(() => {
-		dispatch(updateRoom({ code: roomId, username }))
-	}, [username, roomId])
-
-	const createRoom = async () => {
-		if (username === "") {
-			toast({
-				title: "Please enter a username",
-				status: "error",
-				duration: 2500,
-				isClosable: true,
-			})
-			return
-		}
-
-		const roomId = Math.floor(Math.random() * (99999 - 10000)) + 10000
-		await setDoc(doc(collection(firestore, "rooms"), `${roomId}`), {
-			owner: username,
-			code: roomId,
-			words: [],
-			scores: {
-				[username]: {
-					points: 0,
-					round: 0,
-					guesses: [],
-				},
-			},
-		})
-
-		dispatch(updateRoom({ code: roomId, username }))
-		navigate("/lobby")
-	}
-
-	const joinRoom = async () => {
-		if (username === "") {
-			toast({
-				title: "Please enter a username",
-				status: "error",
-			})
-			return
-		}
-
-		const res = await getDoc(
-			doc(collection(firestore, "rooms"), `${roomId}`),
-		)
-		if (!res.exists()) {
-			toast({
-				title: "Error",
-				description: "Room does not exist",
-				status: "error",
-				duration: 2500,
-				isClosable: true,
-			})
-		} else if (username in res.data().scores) {
-			toast({
-				title: "Error",
-				description: "Username not available",
-				status: "error",
-				duration: 2500,
-				isClosable: true,
-			})
-		} else {
-			setDoc(
-				doc(collection(firestore, "rooms"), `${roomId}`),
-				{
-					scores: {
-						[username]: {
-							points: 0,
-							round: 0,
-							guesses: [],
-						},
-					},
-				},
-				{ merge: true },
-			)
-			navigate("/lobby")
-		}
-	}
-
 	return (
-		<Center display="flex" flexDirection="column" gap={2.5}>
-			<Text fontSize="4xl" fontWeight="bold">
+		<Center
+			display="flex"
+			flexDirection="column"
+			gap={2.5}>
+			<Text
+				fontSize="4xl"
+				fontWeight="bold">
 				Hello! Welcome to alprom
 			</Text>
-			<Text fontSize="2xl" fontWeight="medium" textDecoration="underline">
+			<Text
+				fontSize="2xl"
+				fontWeight="medium"
+				textDecoration="underline">
 				What is alprom?
 			</Text>
-			<Text fontSize="xl" maxW="36ch" textAlign="center">
-				Alprom is a platform where you are able to play Wordle together
-				with your friends and find out who is the real Wordle master!
+			<Text
+				fontSize="xl"
+				maxW="36ch"
+				textAlign="center">
+				Alprom is a platform where you are able to play Wordle together with your friends
+				and find out who is the real Wordle master!
 			</Text>
 			<br />
-			<FormControl isRequired size="lg" w="lg">
+			<FormControl
+				isRequired
+				size="lg"
+				w="lg">
 				<FormLabel htmlFor="username">Username</FormLabel>
 				<Input
 					size="lg"
@@ -130,7 +44,9 @@ const Home = () => {
 					onChange={e => setUsername(e.target.value)}
 				/>
 			</FormControl>
-			<FormControl size="lg" w="lg">
+			<FormControl
+				size="lg"
+				w="lg">
 				<FormLabel
 					htmlFor="room-id"
 					mt="3em"
@@ -139,7 +55,10 @@ const Home = () => {
 					variant="filled">
 					Room Id
 				</FormLabel>
-				<InputGroup size="lg" w="lg" variant="filled">
+				<InputGroup
+					size="lg"
+					w="lg"
+					variant="filled">
 					<Input
 						type="number"
 						placeholder="Enter the room code here to join!"
@@ -147,9 +66,7 @@ const Home = () => {
 					/>
 					<InputRightElement>
 						<IconButton
-							isDisabled={
-								!roomId || roomId < 10000 || roomId > 99999
-							}
+							isDisabled={!roomId || roomId < 10000 || roomId > 99999}
 							aria-label="join-room"
 							bgColor="correct"
 							_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
@@ -160,7 +77,9 @@ const Home = () => {
 					</InputRightElement>
 				</InputGroup>
 			</FormControl>
-			<HStack w="25%" my={5}>
+			<HStack
+				w="25%"
+				my={5}>
 				<Divider />
 				<Text
 					fontSize="xl"
