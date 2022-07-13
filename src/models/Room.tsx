@@ -7,7 +7,7 @@ export enum Guess {
 }
 
 export interface iRoom {
-	id?: string
+	id: string
 	owner: string
 	code: string
 	game: Record<string, Record<string, Array<Array<Guess>>>>

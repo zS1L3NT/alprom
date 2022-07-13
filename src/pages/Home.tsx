@@ -1,4 +1,4 @@
-import { addDoc, getDocs, limit, query, updateDoc, where } from "firebase/firestore"
+import { doc, getDocs, limit, query, setDoc, updateDoc, where } from "firebase/firestore"
 import { FC, PropsWithChildren, useState } from "react"
 import { CgEnter } from "react-icons/cg"
 import { useNavigate } from "react-router-dom"
@@ -19,14 +19,19 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 
 	const createRoom = async () => {
 		try {
-			await addDoc(roomsColl, {
+			const room = {
+				id: doc(roomsColl).id,
 				code: `${Math.floor(Math.random() * (99999 - 10000)) + 10000}`,
 				owner: username,
 				game: {
 					[username]: {}
 				}
+			}
+
+			await setDoc(doc(roomsColl, room.id), room)
+			navigate("/lobby", {
+				state: room
 			})
-			navigate("/lobby")
 		} catch (e) {
 			console.error(e)
 		}
@@ -56,7 +61,15 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 				})
 			} else {
 				await updateDoc(snap!.ref, `game.${username}`, {})
-				navigate("/lobby")
+				navigate("/lobby", {
+					state: {
+						...room,
+						game: {
+							...room!.game,
+							[username]: {}
+						}
+					}
+				})
 			}
 		} catch (e) {
 			console.error(e)

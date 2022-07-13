@@ -1,7 +1,7 @@
 import { Center, Grid, SimpleGrid } from "@chakra-ui/react"
 
-import Keyboard from "../components/Keyboard"
-import LetterBox from "../components/LetterBox"
+// import Keyboard from "../components/Keyboard"
+// import LetterBox from "../components/LetterBox"
 
 const Game = () => {
 	return (
