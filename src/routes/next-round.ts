@@ -6,15 +6,13 @@ import { Guess } from "../models/Room"
 import { Route } from "../setup"
 import wordlist from "../wordlist.json"
 
-export default class extends Route<{ code: number; username: string }, {}> {
+export class POST extends Route<{ code: number; username: string }, {}> {
 	override bodyValidator = OBJECT({
 		code: NUMBER(),
 		username: STRING()
 	})
 
 	async handle() {
-		if (this.req.method !== "POST") return
-
 		const { code, username } = this.body
 
 		const roomDoc = roomsColl.doc(`${code}`)
