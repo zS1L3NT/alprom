@@ -1,5 +1,4 @@
-import { initializeApp } from "firebase-admin"
-import { cert } from "firebase-admin/app"
+import { cert, initializeApp } from "firebase-admin/app"
 import { getFirestore } from "firebase-admin/firestore"
 
 import Room from "./models/Room"
