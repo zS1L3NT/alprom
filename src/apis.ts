@@ -13,4 +13,4 @@ export const firebaseApp = initializeApp({
 })
 
 export const firestore = getFirestore(firebaseApp)
-export const roomCollection = firestore.collection("rooms").withConverter(Room.converter)
+export const roomsColl = firestore.collection("rooms").withConverter(Room.converter)
