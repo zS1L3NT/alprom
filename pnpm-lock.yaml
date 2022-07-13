@@ -7,6 +7,7 @@ specifiers:
   '@types/node': ^17.0.21
   colors: ^1.4.0
   cors: ^2.8.5
+  dotenv: ^16.0.1
   express: ^4.17.3
   firebase-admin: ^10.0.2
   no-try: ^3.1.0
@@ -18,6 +19,7 @@ specifiers:
 dependencies:
   colors: 1.4.0
   cors: 2.8.5
+  dotenv: 16.0.1
   express: 4.18.1
   firebase-admin: 10.3.0
   no-try: 3.1.0
@@ -559,6 +561,11 @@ packages:
       is-obj: 2.0.0
     dev: false
     optional: true
+
+  /dotenv/16.0.1:
+    resolution: {integrity: sha512-1K6hR6wtk2FviQ4kEiSjFiH5rpzEVi8WW0x96aztHVMhEspNpc4DVOUTEHtEva5VThQ8IaBX1Pe4gSzpVVUsKQ==}
+    engines: {node: '>=12'}
+    dev: false
 
   /duplexify/4.1.2:
     resolution: {integrity: sha512-fz3OjcNCHmRP12MJoZMPglx8m4rrFP8rovnk4vT8Fs+aonZoCwGg10dSsQsfP/E62eZcPTMSMP6686fu9Qlqtw==}

@@ -1,10 +1,11 @@
+import "dotenv/config"
+
 import cors from "cors"
 import express from "express"
 import admin from "firebase-admin"
 import fs from "fs"
 import path from "path"
 
-import config from "./config.json"
 import { iRoute } from "./setup"
 
 const PORT = 8945
