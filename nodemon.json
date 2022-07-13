@@ -1,4 +1,0 @@
-{
-	"ext": "ts",
-	"exec": "cls && yarn dev"
-}

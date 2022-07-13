@@ -2,7 +2,6 @@ import "dotenv/config"
 
 import cors from "cors"
 import express from "express"
-import admin from "firebase-admin"
 import fs from "fs"
 import path from "path"
 
@@ -13,10 +12,6 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
-
-admin.initializeApp({
-	credential: admin.credential.cert(config.firebase.service_account)
-})
 
 const readRouteFolder = (folderName: string) => {
 	const folderPath = path.join(__dirname, "routes", folderName)
