@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app"
 import { collection, getFirestore } from "firebase/firestore"
 
-import Room from "./models/Room"
+import { roomConverter } from "./models/Room"
 
 export const firebase = initializeApp({
 	apiKey: "AIzaSyAbgXTk0SHkf9qK5sBC4_GnvJGjZv2wkVU",
@@ -14,4 +14,4 @@ export const firebase = initializeApp({
 })
 
 export const firestore = getFirestore(firebase)
-export const roomsColl = collection(firestore, "rooms").withConverter(Room.converter)
+export const roomsColl = collection(firestore, "rooms").withConverter(roomConverter)

@@ -1,18 +1,14 @@
-import { ChakraProvider, extendTheme, ThemeConfig } from "@chakra-ui/react"
-import React from "react"
-import ReactDOM from "react-dom"
-import { Provider as ReduxProvider } from "react-redux"
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router-dom"
-import App from "./App"
-import store from "./app/store"
 
-const config: ThemeConfig = {
-	initialColorMode: "dark",
-	useSystemColorMode: false
-}
+import { ChakraProvider, extendTheme } from "@chakra-ui/react"
+
+import App from "./App"
 
 const theme = extendTheme({
-	config,
+	initialColorMode: "dark",
+	useSystemColorMode: false,
 	colors: {
 		correct: "hsl(115, 29%, 43%)",
 		present: "hsl(49, 51%, 47%)",
@@ -41,15 +37,12 @@ const theme = extendTheme({
 	}
 })
 
-ReactDOM.render(
-	<React.StrictMode>
+createRoot(document.getElementById("root")!).render(
+	<StrictMode>
 		<BrowserRouter>
-			<ReduxProvider store={store}>
-				<ChakraProvider theme={theme}>
-					<App />
-				</ChakraProvider>
-			</ReduxProvider>
+			<ChakraProvider theme={theme}>
+				<App />
+			</ChakraProvider>
 		</BrowserRouter>
-	</React.StrictMode>,
-	document.getElementById("root")
+	</StrictMode>
 )

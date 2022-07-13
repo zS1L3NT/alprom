@@ -1,11 +1,68 @@
+import { addDoc, getDocs, limit, query, updateDoc, where } from "firebase/firestore"
+import { FC, PropsWithChildren, useState } from "react"
 import { CgEnter } from "react-icons/cg"
+import { useNavigate } from "react-router-dom"
 
 import {
 	Button, Center, Divider, FormControl, FormLabel, HStack, IconButton, Input, InputGroup,
-	InputRightElement, Text
+	InputRightElement, Text, useToast
 } from "@chakra-ui/react"
 
-const Home = () => {
+import { roomsColl } from "../firebase"
+
+const _Home: FC<PropsWithChildren<{}>> = () => {
+	const navigate = useNavigate()
+	const toast = useToast()
+
+	const [username, setUsername] = useState("")
+	const [code, setCode] = useState("")
+
+	const createRoom = async () => {
+		try {
+			await addDoc(roomsColl, {
+				code: `${Math.floor(Math.random() * (99999 - 10000)) + 10000}`,
+				owner: username,
+				game: {
+					[username]: {}
+				}
+			})
+			navigate("/lobby")
+		} catch (e) {
+			console.error(e)
+		}
+	}
+
+	const joinRoom = async () => {
+		try {
+			const snaps = await getDocs(query(roomsColl, where("code", "==", code), limit(1)))
+			const snap = snaps.docs[0]
+			const room = snap?.data()
+
+			if (room === null) {
+				toast({
+					title: "Error",
+					description: "Room does not exist",
+					status: "error",
+					duration: 2500,
+					isClosable: true
+				})
+			} else if (Object.keys(room!.game).includes(username)) {
+				toast({
+					title: "Error",
+					description: "Username not available",
+					status: "error",
+					duration: 2500,
+					isClosable: true
+				})
+			} else {
+				await updateDoc(snap!.ref, `game.${username}`, {})
+				navigate("/lobby")
+			}
+		} catch (e) {
+			console.error(e)
+		}
+	}
+
 	return (
 		<Center
 			display="flex"
@@ -62,11 +119,11 @@ const Home = () => {
 					<Input
 						type="number"
 						placeholder="Enter the room code here to join!"
-						onChange={e => setRoomId(+e.target.value)}
+						onChange={e => setCode(e.target.value)}
 					/>
 					<InputRightElement>
 						<IconButton
-							isDisabled={!roomId || roomId < 10000 || roomId > 99999}
+							isDisabled={code.length !== 5}
 							aria-label="join-room"
 							bgColor="correct"
 							_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
@@ -91,7 +148,7 @@ const Home = () => {
 				<Divider />
 			</HStack>
 			<Button
-				isDisabled={!!roomId}
+				isDisabled={!!code || !username}
 				bgColor="correct"
 				onClick={createRoom}
 				_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
@@ -102,4 +159,4 @@ const Home = () => {
 	)
 }
 
-export default Home
+export default _Home
