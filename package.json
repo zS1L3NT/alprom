@@ -8,11 +8,13 @@
 		"dev": "ts-node --files src/app.ts"
 	},
 	"dependencies": {
+		"colors": "^1.4.0",
 		"cors": "^2.8.5",
 		"express": "^4.17.3",
 		"firebase-admin": "^10.0.2",
 		"no-try": "^3.1.0",
 		"simple-crypto-js": "^3.0.1",
+		"tracer": "^1.1.6",
 		"validate-any": "^1.2.1"
 	},
 	"devDependencies": {
