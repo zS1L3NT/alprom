@@ -1,8 +1,11 @@
+import axios from "axios"
 import { doc, DocumentReference, onSnapshot, updateDoc } from "firebase/firestore"
 import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import { Box, Center, Flex, Grid, SimpleGrid, Spinner, Text, useToast } from "@chakra-ui/react"
+import {
+	Box, Center, Fade, Flex, Grid, SimpleGrid, Spinner, Text, useBoolean, useToast
+} from "@chakra-ui/react"
 
 import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
@@ -14,6 +17,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	const navigate = useNavigate()
 	const toast = useToast()
 
+	const [isLoading, setIsLoading] = useBoolean()
 	const [username, setUsername] = useState<string | null>(null)
 	const [roomRef, setRoomRef] = useState<DocumentReference<iRoom> | null>(null)
 	const [room, setRoom] = useState<iRoom | null>(null)
@@ -54,9 +58,12 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				const room = doc.data()
 
 				if (username in room.game) {
-					setRoom(doc.data())
+					const word = room.words[Object.keys(room.game[username]!).length - 1]!
 
-					const letters = doc.data().game[username]![word]!
+					setRoom(room)
+					setWord(word)
+
+					const letters = room.game[username]![word]!
 					const letterChunks = []
 
 					for (let i = 0; i < letters.length; i += 5) {
@@ -90,9 +97,9 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	}, [roomRef, username, word])
 
 	useEffect(() => {
-		if (roomRef === null || room === null || username === null || word === null) return
-
 		const handler = async (e: KeyboardEvent) => {
+			if (roomRef === null || room === null || username === null || word === null) return
+
 			switch (e.key) {
 				case "Backspace":
 					setLetterChunks(letters => {
@@ -114,6 +121,13 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 							if (letters.length < 6) {
 								return [...letters, []]
 							} else {
+								setIsLoading.on()
+								axios
+									.post("http://alprom.zectan.com/api/next-round", {
+										code: room!.code,
+										username
+									})
+									.finally(setIsLoading.off)
 								return letters
 							}
 						} else {
@@ -154,85 +168,98 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	}
 
 	return (
-		<Flex
-			justifyContent="space-evenly"
-			alignItems="center">
-			<SimpleGrid
-				w="fit-content"
-				columns={2}
-				columnGap={4}
-				rowGap={8}>
-				{Object.entries(room.game ?? {})
-					.filter(entry => entry[0] !== username)
-					.map(([username, data]) => {
-						const word = room.words[Object.keys(data).length - 1]!
-						const guesses = getGuesses(word, data[word]!)
+		<>
+			<Flex
+				justifyContent="space-evenly"
+				alignItems="center">
+				<SimpleGrid
+					w="fit-content"
+					columns={2}
+					columnGap={4}
+					rowGap={8}>
+					{Object.entries(room.game ?? {})
+						.filter(entry => entry[0] !== username)
+						.map(([username, data]) => {
+							const word = room.words[Object.keys(data).length - 1]!
+							const guesses = getGuesses(word, data[word]!)
 
-						return (
-							<Box key={username}>
-								<Text
-									fontWeight="medium"
-									fontSize={20}
-									textAlign="center">
-									{username}
-								</Text>
-								<Text
-									mb={1}
-									fontSize={16}
-									color="gray.500"
-									textAlign="center">
-									Word: #{Object.keys(data).length}
-								</Text>
-								<Grid
-									templateColumns="repeat(5, min-content)"
-									gap={1.5}>
-									{guesses.map((guess, i) => (
-										<LetterSquare
-											key={i}
-											guess={guess}
-											letter=""
-											isSmall={true}
-										/>
-									))}
-								</Grid>
-							</Box>
-						)
-					})}
-			</SimpleGrid>
-			<Center
-				flexDirection="column"
-				h="90vh">
-				<Text
-					fontWeight="medium"
-					fontSize={32}
-					textAlign="center">
-					{username} (You)
-				</Text>
-				<Text
-					mb={4}
-					fontSize={24}
-					color="gray.500"
-					textAlign="center">
-					Word: #{Object.keys(room.game[username]!).length}
-				</Text>
-				<Grid
-					templateColumns="repeat(5, min-content)"
-					gap={1.5}
-					marginBottom={5}>
-					{getGuesses(word, letterChunks.flat()).map((guess, i) => {
-						return (
-							<LetterSquare
-								key={i}
-								guess={!!room.game[username]![word]![i] ? guess : null}
-								letter={letterChunks[(i / 5) | 0]?.[i % 5] ?? ""}
-								isSmall={false}
-							/>
-						)
-					})}
-				</Grid>
-				{/* <Keyboard /> */}
-			</Center>
-		</Flex>
+							return (
+								<Box key={username}>
+									<Text
+										fontWeight="medium"
+										fontSize={20}
+										textAlign="center">
+										{username}
+									</Text>
+									<Text
+										mb={1}
+										fontSize={16}
+										color="gray.500"
+										textAlign="center">
+										Word: #{Object.keys(data).length}
+									</Text>
+									<Grid
+										templateColumns="repeat(5, min-content)"
+										gap={1.5}>
+										{guesses.map((guess, i) => (
+											<LetterSquare
+												key={i}
+												guess={guess}
+												letter=""
+												isSmall={true}
+											/>
+										))}
+									</Grid>
+								</Box>
+							)
+						})}
+				</SimpleGrid>
+				<Center
+					flexDirection="column"
+					h="90vh">
+					<Text
+						fontWeight="medium"
+						fontSize={32}
+						textAlign="center">
+						{username} (You)
+					</Text>
+					<Text
+						mb={4}
+						fontSize={24}
+						color="gray.500"
+						textAlign="center">
+						Word: #{Object.keys(room.game[username]!).length}
+					</Text>
+					<Grid
+						templateColumns="repeat(5, min-content)"
+						gap={1.5}
+						marginBottom={5}>
+						{getGuesses(word, letterChunks.flat()).map((guess, i) => {
+							return (
+								<LetterSquare
+									key={i}
+									guess={!!room.game[username]![word]![i] ? guess : null}
+									letter={letterChunks[(i / 5) | 0]?.[i % 5] ?? ""}
+									isSmall={false}
+								/>
+							)
+						})}
+					</Grid>
+					{/* <Keyboard /> */}
+				</Center>
+			</Flex>
+			<Fade in={isLoading}>
+				<Center
+					pos="absolute"
+					top={0}
+					w="100%"
+					h="100%"
+					bg="black"
+					opacity="0.5">
+					<Spinner />
+				</Center>
+			</Fade>
+		</>
 	)
 }
 
