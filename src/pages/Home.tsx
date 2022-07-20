@@ -9,6 +9,7 @@ import {
 } from "@chakra-ui/react"
 
 import { roomsColl } from "../firebase"
+import { iRoom } from "../models/Room"
 
 const _Home: FC<PropsWithChildren<{}>> = () => {
 	const navigate = useNavigate()
@@ -19,10 +20,11 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 
 	const createRoom = async () => {
 		try {
-			const room = {
+			const room: iRoom = {
 				id: doc(roomsColl).id,
 				code: `${Math.floor(Math.random() * (99999 - 10000)) + 10000}`,
 				owner: username,
+				words: [],
 				game: {
 					[username]: {}
 				}
@@ -30,7 +32,10 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 
 			await setDoc(doc(roomsColl, room.id), room)
 			navigate("/lobby", {
-				state: room
+				state: {
+					username,
+					room
+				}
 			})
 		} catch (e) {
 			console.error(e)
@@ -63,10 +68,13 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 				await updateDoc(snap!.ref, `game.${username}`, {})
 				navigate("/lobby", {
 					state: {
-						...room,
-						game: {
-							...room!.game,
-							[username]: {}
+						username,
+						room: {
+							...room,
+							game: {
+								...room!.game,
+								[username]: {}
+							}
 						}
 					}
 				})
