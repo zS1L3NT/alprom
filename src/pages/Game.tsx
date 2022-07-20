@@ -1,5 +1,6 @@
 import axios from "axios"
 import { doc, DocumentReference, onSnapshot, updateDoc } from "firebase/firestore"
+import { DateTime } from "luxon"
 import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
@@ -11,10 +12,12 @@ import Keyboard from "../components/Keyboard"
 import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
 import getGuesses from "../functions/getGuesses"
+import useForceRerender from "../hooks/useForceRerender"
 import { iRoom } from "../models/Room"
 import words from "../words.json"
 
 const Game: FC<PropsWithChildren<{}>> = props => {
+	const forceRerender = useForceRerender()
 	const location = useLocation()
 	const navigate = useNavigate()
 	const toast = useToast()
@@ -25,6 +28,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	const [room, setRoom] = useState<iRoom | null>(null)
 	const [word, setWord] = useState<string | null>(null)
 	const [letterChunks, setLetterChunks] = useState<string[][]>([[]])
+	const [endTime, setEndTime] = useState<DateTime | null>(null)
 
 	const alphabet = Array.from(Array(26)).map((_, i) => String.fromCharCode(i + 65))
 
@@ -60,10 +64,19 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				const room = doc.data()
 
 				if (username in room.game) {
-					const word = room.words[Object.keys(room.game[username]!).length - 1]!
+					const answered = Object.keys(room.game[username]!).length - 1
+					const word = room.words[answered]!
 
 					setRoom(room)
 					setWord(word)
+					setEndTime(
+						endTime =>
+							endTime ??
+							DateTime.fromJSDate(room.startedAt!.toDate()).plus({
+								minutes: 1,
+								seconds: 15 * answered
+							})
+					)
 
 					const letters = room.game[username]![word]!
 					const letterChunks = []
@@ -109,6 +122,22 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 			window.removeEventListener("keydown", handler)
 		}
 	}, [roomRef, room, username, word])
+
+	useEffect(() => {
+		if (!endTime) return
+
+		const interval = setInterval(() => {
+			if (endTime.diffNow().milliseconds < 1000) {
+				console.log("done");
+			} else {
+				forceRerender()
+			}
+		}, 1000)
+
+		return () => {
+			clearInterval(interval)
+		}
+	}, [endTime])
 
 	const handleKey = (key: string) => {
 		if (roomRef === null || room === null || username === null || word === null) return
@@ -185,12 +214,25 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 		}
 	}
 
-	if (username === null || room === null || word === null) {
+	if (username === null || room === null || word === null || endTime === null) {
 		return <Spinner />
 	}
 
 	return (
 		<>
+			<Text
+				textAlign="center"
+				fontSize={48}
+				fontWeight="bold"
+				px={4}
+				mb={4}
+				mx="auto"
+				w="fit-content"
+				borderWidth="1px"
+				borderRadius={8}>
+				{(((endTime.diffNow().milliseconds / 60000) | 0) + "").padStart(2, "0")}:
+				{(((endTime.diffNow().milliseconds / 1000 % 60) | 0) + "").padStart(2, "0")}
+			</Text>
 			<Flex
 				justifyContent="space-evenly"
 				alignItems="center">

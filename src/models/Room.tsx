@@ -1,4 +1,4 @@
-import { FirestoreDataConverter } from "firebase/firestore"
+import { FirestoreDataConverter, Timestamp } from "firebase/firestore"
 
 export enum Guess {
 	Incorrect = "incorrect",
@@ -11,6 +11,7 @@ export interface iRoom {
 	owner: string
 	code: string
 	words: string[]
+	startedAt: Timestamp | null
 	game: Record<string, Record<string, Array<string>>>
 }
 
@@ -19,6 +20,7 @@ export const roomConverter: FirestoreDataConverter<iRoom> = {
 		owner: room.owner ?? null,
 		code: room.code ?? null,
 		words: room.words ?? null,
+		startedAt: room.startedAt ?? null,
 		game: room.game ?? null
 	}),
 	fromFirestore: snap => ({
@@ -26,6 +28,7 @@ export const roomConverter: FirestoreDataConverter<iRoom> = {
 		owner: snap.get("owner"),
 		code: snap.get("code"),
 		words: snap.get("words"),
+		startedAt: snap.get("startedAt"),
 		game: snap.get("game")
 	})
 }
