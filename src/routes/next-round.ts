@@ -14,12 +14,13 @@ export class POST extends Route<{ code: string; username: string }, {}> {
 	async handle() {
 		const { code, username } = this.body
 
-		const roomDoc = roomsColl.doc(code)
-		const snap = await roomDoc.get()
-		if (!snap.exists) {
+		const snaps = await roomsColl.where("code", "==", code).get()
+		const snap = snaps.docs[0]
+		if (!snap || snap?.exists) {
 			return this.throw(`Could not find one room with the code: ${code}`)
 		}
 
+		const roomDoc = snap.ref
 		const room = snap.data()!
 		if (!(username in room.game)) {
 			return this.throw(`Could not find any user in the room with the username: ${username}`)
@@ -35,11 +36,14 @@ export class POST extends Route<{ code: string; username: string }, {}> {
 				}
 			}
 
-			await roomDoc.set({
-				words: [newWord],
-				//@ts-ignore
-				game: room.game
-			}, {merge: true})
+			await roomDoc.set(
+				{
+					words: [newWord],
+					//@ts-ignore
+					game: room.game
+				},
+				{ merge: true }
+			)
 
 			return this.respond({ word: newWord })
 		}
