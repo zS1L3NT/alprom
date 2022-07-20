@@ -12,6 +12,7 @@ import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
 import getGuesses from "../functions/getGuesses"
 import { iRoom } from "../models/Room"
+import words from "../words.json"
 
 const Game: FC<PropsWithChildren<{}>> = props => {
 	const location = useLocation()
@@ -114,6 +115,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 
 		switch (key) {
 			case "BACKSPACE":
+				toast.close("invalid-word-toast")
 				setLetterChunks(letters => {
 					if (letters.length === 0) return [[]]
 
@@ -126,6 +128,23 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 			case "ENTER":
 				setLetterChunks(letters => {
 					if (letters.at(-1)!.length === 5) {
+						if (!words.includes(letters.at(-1)!.join(""))) {
+							toast.close("invalid-word-toast")
+							setTimeout(() => {
+								toast({
+									id: "invalid-word-toast",
+									title: "Invalid Word",
+									description: "The word you entered doesn't exist!",
+									position: "top-right",
+									status: "error",
+									isClosable: true
+								})
+							}, 0)
+							return letters
+						} else {
+							toast.close("invalid-word-toast")
+						}
+
 						updateDoc(roomRef, `game.${username}.${word}`, [
 							...room!.game[username]![word]!,
 							...letters.at(-1)!
@@ -148,6 +167,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				})
 				break
 			default:
+				toast.close("invalid-word-toast")
 				if (alphabet.includes(key)) {
 					setLetterChunks(letters => {
 						if (letters.length === 1) {
@@ -216,9 +236,9 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 							)
 						})}
 				</SimpleGrid>
-				<Center
-					flexDirection="column"
-					h="90vh">
+				<Flex
+					direction="column"
+					alignItems="center">
 					<Text
 						fontWeight="medium"
 						fontSize={32}
@@ -253,7 +273,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						submittedLetters={room.game[username]![word]!}
 						handleKey={handleKey}
 					/>
-				</Center>
+				</Flex>
 			</Flex>
 			<Fade in={isLoading}>
 				<Center
