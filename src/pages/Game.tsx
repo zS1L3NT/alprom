@@ -195,6 +195,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				justifyContent="space-evenly"
 				alignItems="center">
 				<SimpleGrid
+					display={Object.keys(room.game).length === 1 ? "none" : "block"}
 					w="fit-content"
 					columns={2}
 					columnGap={4}
