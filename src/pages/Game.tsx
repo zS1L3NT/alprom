@@ -1,47 +1,118 @@
-import { Center, Grid, SimpleGrid } from "@chakra-ui/react"
+import { doc, DocumentReference, onSnapshot } from "firebase/firestore"
+import { FC, PropsWithChildren, useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 
-// import Keyboard from "../components/Keyboard"
-// import LetterBox from "../components/LetterBox"
+import { Center, Grid, SimpleGrid, Spinner, useToast } from "@chakra-ui/react"
 
-const Game = () => {
+import LetterSquare from "../components/LetterSquare"
+import { roomsColl } from "../firebase"
+import calculate from "../functions/calculate"
+import { iRoom } from "../models/Room"
+
+const Game: FC<PropsWithChildren<{}>> = props => {
+	const location = useLocation()
+	const navigate = useNavigate()
+	const toast = useToast()
+
+	const [username, setUsername] = useState<string | null>(null)
+	const [roomRef, setRoomRef] = useState<DocumentReference<iRoom> | null>(null)
+	const [room, setRoom] = useState<iRoom | null>(null)
+	const [word, setWord] = useState<string | null>(null)
+	const [letters, setLetters] = useState<string[][]>([])
+
+	useEffect(() => {
+		if (username === null) {
+			const state = location.state as {
+				username: string
+				roomId: string
+				word: string
+			}
+
+			if (state) {
+				setUsername(state.username)
+				setRoomRef(doc(roomsColl, state.roomId))
+				setWord(state.word)
+			} else {
+				console.log("/")
+				toast({
+					title: "No game found",
+					description: "Could not re-enter the game page",
+					status: "error",
+					duration: 2500
+				})
+			}
+		}
+	}, [username, location])
+
+	useEffect(() => {
+		if (roomRef === null || username === null) return
+
+		console.log("snap")
+
+		return onSnapshot(roomRef, doc => {
+			if (doc.exists()) {
+				const room = doc.data()
+
+				if (username in room.game) {
+					setRoom(doc.data())
+				} else {
+					// navigate("/")
+					toast({
+						title: "Kicked from room",
+						description: "Someone removed you from the game",
+						status: "error",
+						duration: 2500
+					})
+				}
+			} else {
+				// navigate("/")
+				toast({
+					title: "Room Closed",
+					description: "The game room has been closed",
+					status: "error",
+					duration: 2500
+				})
+			}
+		})
+	}, [roomRef, username])
+
+	if (username === null || room === null || word === null) {
+		return <Spinner />
+	}
+
 	return (
 		<Center>
 			<SimpleGrid columns={2}>
-				{/* left side players */}
 				<SimpleGrid
 					columns={2}
 					columnGap={4}
 					rowGap={8}
 					paddingRight={8}>
-					{/* map player scores dictionary to 6x6 grid */}
-					{Object.keys(room.scores || {}).map((key, index) => {
-						// get each player's guesses
-						var guessesArr = room.scores![key].guesses
+					{Object.entries(room.game ?? {}).map(([username, data]) => {
+						const word = room.words[Object.keys(data).length - 1]!
+						const guesses = [
+							...data[word]!.flat(),
+							...Array.from<null>(Array(30 - data[word]!.length * 5)).fill(null)
+						]
+
 						return (
 							<Grid
-								key={index}
+								key={username}
 								templateColumns="repeat(5, min-content)"
 								gap={1.5}>
-								{Array(30)
-									.fill(0)
-									.map((_, i) =>
-										guessesArr == undefined ? (
-											<></>
-										) : (
-											<LetterBox
-												key={`${index}-${i}`}
-												state={guessesArr[i]}
-												isSmall={true}
-											/>
-										)
-									)}
+								{guesses.map((guess, i) => (
+									<LetterSquare
+										key={i}
+										guess={guess}
+										letter=""
+										isSmall={true}
+									/>
+								))}
 							</Grid>
 						)
 					})}
 				</SimpleGrid>
 			</SimpleGrid>
-
-			{/* main grid and keyboard */}
 			<Center
 				flexDirection="column"
 				h="90vh">
@@ -49,15 +120,41 @@ const Game = () => {
 					templateColumns="repeat(5, min-content)"
 					gap={1.5}
 					marginBottom={5}>
-					{wordArrays.data.flat().map((letter, index) => (
-						<LetterBox
-							key={index}
-							state={letter.state}
-							letter={letter.letter}
-						/>
-					))}
+					{[...letters, ...Array.from<null>(Array(6 - letters.length)).fill(null)].map(
+						(row, i) => {
+							if (row?.every(letter => letter !== null)) {
+								const result = calculate(word!, row!.join(""))
+								return result.map((guess, i) => (
+									<LetterSquare
+										key={i}
+										guess={guess}
+										letter={row[i]!}
+										isSmall={false}
+									/>
+								))
+							} else if (row?.some(letter => letter !== null)) {
+								return row!.map((letter, i) => (
+									<LetterSquare
+										key={i}
+										guess={null}
+										letter={letter}
+										isSmall={false}
+									/>
+								))
+							} else {
+								return Array.from(Array(5)).map((_, i) => (
+									<LetterSquare
+										key={i}
+										guess={null}
+										letter=""
+										isSmall={false}
+									/>
+								))
+							}
+						}
+					)}
 				</Grid>
-				<Keyboard />
+				{/* <Keyboard /> */}
 			</Center>
 		</Center>
 	)

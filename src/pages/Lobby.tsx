@@ -52,7 +52,8 @@ const Lobby = () => {
 					if (Object.keys(room.game[username]!).length === 1) {
 						navigate("/game", {
 							state: {
-								room,
+								username,
+								roomId: room.id,
 								word: room.words.at(-1)
 							}
 						})
@@ -66,13 +67,13 @@ const Lobby = () => {
 						setRoom(doc.data())
 					}
 				} else {
+					navigate("/")
 					toast({
 						title: "Kicked from room",
 						description: "Someone removed you from the game room",
 						status: "error",
 						duration: 2500
 					})
-					navigate("/")
 				}
 			} else {
 				navigate("/")
@@ -97,7 +98,7 @@ const Lobby = () => {
 
 	const startGame = async () => {
 		try {
-			await axios.post("http://localhost:8945/api/next-round", {
+			await axios.post("http://alprom.zectan.com/api/next-round", {
 				code: room!.code,
 				username: username!
 			})
