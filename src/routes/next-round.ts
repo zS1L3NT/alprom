@@ -36,44 +36,30 @@ export class POST extends Route<{ code: string; username: string }, {}> {
 				}
 			}
 
-			await roomDoc.set(
-				{
-					words: [newWord],
-					//@ts-ignore
-					game: room.game
-				},
-				{ merge: true }
-			)
+			//@ts-ignore
+			await roomDoc.update({
+				words: [newWord],
+				//@ts-ignore
+				game: room.game
+			})
 
 			return this.respond({ word: newWord })
 		}
 
 		if (Object.keys(user).length === room.words.length) {
-			await roomDoc.set(
-				{
-					words: FieldValue.arrayUnion(newWord),
-					game: {
-						[username]: {
-							[newWord]: []
-						}
-					}
-				},
-				{ merge: true }
-			)
+			// @ts-ignore
+			await roomDoc.update({
+				words: FieldValue.arrayUnion(newWord),
+				[`game.${username}.${newWord}`]: []
+			})
 
 			return this.respond({ word: newWord })
 		}
 
-		await roomDoc.set(
-			{
-				game: {
-					[username]: {
-						[room.words[Object.keys(user).length]!]: []
-					}
-				}
-			},
-			{ merge: true }
-		)
+		// @ts-ignore
+		await roomDoc.update({
+			[`game.${username}.${room.words[Object.keys(user).length]!}`]: []
+		})
 
 		return this.respond({ word: newWord })
 	}
