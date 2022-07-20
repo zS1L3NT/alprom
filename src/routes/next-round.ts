@@ -16,7 +16,7 @@ export class POST extends Route<{ code: string; username: string }, {}> {
 
 		const snaps = await roomsColl.where("code", "==", code).get()
 		const snap = snaps.docs[0]
-		if (!snap || snap?.exists) {
+		if (!snap) {
 			return this.throw(`Could not find one room with the code: ${code}`)
 		}
 
