@@ -16,10 +16,10 @@ export interface iRoom {
 
 export const roomConverter: FirestoreDataConverter<iRoom> = {
 	toFirestore: room => ({
-		owner: room.owner,
-		code: room.code,
-		words: room.words,
-		game: room.game
+		owner: room.owner ?? null,
+		code: room.code ?? null,
+		words: room.words ?? null,
+		game: room.game ?? null
 	}),
 	fromFirestore: snap => ({
 		id: snap.id,
