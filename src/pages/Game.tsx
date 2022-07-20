@@ -6,7 +6,7 @@ import { Center, Grid, SimpleGrid, Spinner, useToast } from "@chakra-ui/react"
 
 import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
-import calculate from "../functions/calculate"
+import getGuesses from "../functions/getGuesses"
 import { iRoom } from "../models/Room"
 
 const Game: FC<PropsWithChildren<{}>> = props => {
@@ -35,7 +35,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				setRoomRef(doc(roomsColl, state.roomId))
 				setWord(state.word)
 			} else {
-				console.log("/")
+				navigate("/")
 				toast({
 					title: "No game found",
 					description: "Could not re-enter the game page",
@@ -96,9 +96,13 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						if (letters.at(-1)!.length === 5) {
 							updateDoc(roomRef, `game.${username}.${word}`, [
 								...room!.game[username]![word]!,
-								...calculate(word!, letters.at(-1)!.join(""))
+								...letters.at(-1)!
 							])
-							return [...letters, []]
+							if (letters.length < 6) {
+								return [...letters, []]
+							} else {
+								return letters
+							}
 						} else {
 							return letters
 						}
@@ -148,10 +152,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						.filter(entry => entry[0] !== username)
 						.map(([username, data]) => {
 							const word = room.words[Object.keys(data).length - 1]!
-							const guesses = [
-								...data[word]!,
-								...Array.from<null>(Array(30 - data[word]!.length)).fill(null)
-							]
+							const guesses = getGuesses(word, data[word]!)
 
 							return (
 								<Grid
@@ -178,39 +179,16 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					templateColumns="repeat(5, min-content)"
 					gap={1.5}
 					marginBottom={5}>
-					{[...letters, ...Array.from<null>(Array(6 - letters.length)).fill(null)].map(
-						(row, i) => {
-							const guesses = room.game[username]![word]!.slice(i * 5, i * 5 + 5)
-							if (row && row.length === 5 && guesses.length === 5) {
-								return guesses.map((guess, i) => (
-									<LetterSquare
-										key={i}
-										guess={guess}
-										letter={row[i]!}
-										isSmall={false}
-									/>
-								))
-							} else if (row && row.length > 0) {
-								return Array.from(Array(5)).map((_, i) => (
-									<LetterSquare
-										key={i}
-										guess={null}
-										letter={row[i] ?? ""}
-										isSmall={false}
-									/>
-								))
-							} else {
-								return Array.from(Array(5)).map((_, i) => (
-									<LetterSquare
-										key={i}
-										guess={null}
-										letter=""
-										isSmall={false}
-									/>
-								))
-							}
-						}
-					)}
+					{getGuesses(word, letters.flat()).map((guess, i) => {
+						return (
+							<LetterSquare
+								key={i}
+								guess={!!room.game[username]![word]![i] ? guess : null}
+								letter={letters[(i / 5) | 0]?.[i % 5] ?? ""}
+								isSmall={false}
+							/>
+						)
+					})}
 				</Grid>
 				{/* <Keyboard /> */}
 			</Center>
