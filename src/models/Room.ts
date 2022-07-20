@@ -1,35 +1,31 @@
 import { FirestoreDataConverter } from "firebase-admin/firestore"
 
 export enum Guess {
-	Transparent,
-	Absent,
-	Present,
-	Correct
+	Incorrect = "incorrect",
+	Partial = "partial",
+	Correct = "correct"
 }
 
-export default class Room {
-	constructor(
-		public owner: string,
-		public code: number,
-		public words: string[],
-		public scores: Record<
-			string,
-			{
-				points: number
-				round: number
-				guesses: Guess[]
-			}
-		>
-	) {}
+export interface iRoom {
+	id: string
+	owner: string
+	code: string
+	words: string[]
+	game: Record<string, Record<string, Array<Array<Guess>>>>
+}
 
-	static converter: FirestoreDataConverter<Room> = {
-		toFirestore: room => ({
-			owner: room.owner,
-			code: room.code,
-			words: room.words,
-			scores: room.scores
-		}),
-		fromFirestore: snap =>
-			new Room(snap.get("owner"), snap.get("code"), snap.get("words"), snap.get("scores"))
-	}
+export const roomConverter: FirestoreDataConverter<iRoom> = {
+	toFirestore: room => ({
+		owner: room.owner,
+		code: room.code,
+		words: room.words,
+		game: room.game
+	}),
+	fromFirestore: snap => ({
+		id: snap.id,
+		owner: snap.get("owner"),
+		code: snap.get("code"),
+		words: snap.get("words"),
+		game: snap.get("game")
+	})
 }

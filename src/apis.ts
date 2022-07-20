@@ -1,7 +1,7 @@
 import { cert, initializeApp } from "firebase-admin/app"
 import { getFirestore } from "firebase-admin/firestore"
 
-import Room from "./models/Room"
+import { roomConverter } from "./models/Room"
 
 export const firebaseApp = initializeApp({
 	credential: cert({
@@ -12,4 +12,4 @@ export const firebaseApp = initializeApp({
 })
 
 export const firestore = getFirestore(firebaseApp)
-export const roomsColl = firestore.collection("rooms").withConverter(Room.converter)
+export const roomsColl = firestore.collection("rooms").withConverter(roomConverter)

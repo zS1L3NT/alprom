@@ -2,7 +2,6 @@ import { FieldValue } from "firebase-admin/firestore"
 import { NUMBER, OBJECT, STRING } from "validate-any"
 
 import { roomsColl } from "../apis"
-import { Guess } from "../models/Room"
 import { Route } from "../setup"
 import wordlist from "../wordlist.json"
 
@@ -22,65 +21,55 @@ export class POST extends Route<{ code: number; username: string }, {}> {
 		}
 
 		const room = snap.data()!
-		if (!(username in room.scores)) {
+		if (!(username in room.game)) {
 			return this.throw(`Could not find any user in the room with the username: ${username}`)
 		}
 
 		const newWord = wordlist[Math.floor(Math.random() * wordlist.length)]!
-		const user = room.scores[username]!
+		const user = room.game[username]!
 
 		if (room.words.length === 0) {
-			for (const username in room.scores) {
-				room.scores[username] = {
-					points: 0,
-					round: 1,
-					guesses: Array(30).fill(Guess.Transparent)
+			for (const username in room.game) {
+				room.game[username] = {
+					[newWord]: []
 				}
 			}
 
-			await roomDoc.update({
+			await roomDoc.set({
 				words: [newWord],
-				// @ts-ignore
-				scores: room.scores
-			})
+				//@ts-ignore
+				game: room.game
+			}, {merge: true})
 
 			return this.respond({ word: newWord })
 		}
 
-		const guesses = Array(6)
-			.fill(0)
-			.map((_, i) => user.guesses.slice(i * 5, i * 5 + 5))
-			.filter(g => !g.every(l => l === 0))
-		if (!guesses.at(-1)?.every(l => l === 3)) {
-			return this.throw(`The last guess by the user was an incorrect guess, cannot move on`)
+		if (Object.keys(user).length === room.words.length) {
+			await roomDoc.set(
+				{
+					words: FieldValue.arrayUnion(newWord),
+					game: {
+						[username]: {
+							[newWord]: []
+						}
+					}
+				},
+				{ merge: true }
+			)
+
+			return this.respond({ word: newWord })
 		}
 
-		if (guesses.length === room.words.length) {
-			await roomDoc.update({
-				words: FieldValue.arrayUnion(newWord),
-				// @ts-ignore
-				scores: {
+		await roomDoc.set(
+			{
+				game: {
 					[username]: {
-						points: FieldValue.increment(6 - guesses.length),
-						round: FieldValue.increment(1),
-						guesses: Array(30).fill(Guess.Transparent)
+						[room.words[Object.keys(user).length]!]: []
 					}
 				}
-			})
-
-			return this.respond({ word: newWord })
-		}
-
-		await roomDoc.update({
-			// @ts-ignore
-			scores: {
-				[username]: {
-					points: FieldValue.increment(6 - guesses.length),
-					round: FieldValue.increment(1),
-					guesses: Array(30).fill(Guess.Transparent)
-				}
-			}
-		})
+			},
+			{ merge: true }
+		)
 
 		return this.respond({ word: newWord })
 	}
