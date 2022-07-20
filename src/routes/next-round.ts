@@ -26,7 +26,7 @@ export class POST extends Route<{ code: string; username: string }, {}> {
 			return this.throw(`Could not find any user in the room with the username: ${username}`)
 		}
 
-		const newWord = wordlist[Math.floor(Math.random() * wordlist.length)]!
+		const newWord = wordlist[Math.floor(Math.random() * wordlist.length)]!.toUpperCase()
 		const user = room.game[username]!
 
 		if (room.words.length === 0) {
