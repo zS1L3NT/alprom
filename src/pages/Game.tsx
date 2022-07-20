@@ -2,7 +2,7 @@ import { doc, DocumentReference, onSnapshot, updateDoc } from "firebase/firestor
 import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import { Center, Grid, SimpleGrid, Spinner, useToast } from "@chakra-ui/react"
+import { Box, Center, Flex, Grid, SimpleGrid, Spinner, Text, useToast } from "@chakra-ui/react"
 
 import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
@@ -154,22 +154,36 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	}
 
 	return (
-		<Center>
-			<SimpleGrid columns={2}>
-				<SimpleGrid
-					columns={2}
-					columnGap={4}
-					rowGap={8}
-					paddingRight={8}>
-					{Object.entries(room.game ?? {})
-						.filter(entry => entry[0] !== username)
-						.map(([username, data]) => {
-							const word = room.words[Object.keys(data).length - 1]!
-							const guesses = getGuesses(word, data[word]!)
+		<Flex
+			justifyContent="space-evenly"
+			alignItems="center">
+			<SimpleGrid
+				w="fit-content"
+				columns={2}
+				columnGap={4}
+				rowGap={8}>
+				{Object.entries(room.game ?? {})
+					.filter(entry => entry[0] !== username)
+					.map(([username, data]) => {
+						const word = room.words[Object.keys(data).length - 1]!
+						const guesses = getGuesses(word, data[word]!)
 
-							return (
+						return (
+							<Box key={username}>
+								<Text
+									fontWeight="medium"
+									fontSize={20}
+									textAlign="center">
+									{username}
+								</Text>
+								<Text
+									mb={1}
+									fontSize={16}
+									color="gray.500"
+									textAlign="center">
+									Word: #{Object.keys(data).length}
+								</Text>
 								<Grid
-									key={username}
 									templateColumns="repeat(5, min-content)"
 									gap={1.5}>
 									{guesses.map((guess, i) => (
@@ -181,13 +195,26 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 										/>
 									))}
 								</Grid>
-							)
-						})}
-				</SimpleGrid>
+							</Box>
+						)
+					})}
 			</SimpleGrid>
 			<Center
 				flexDirection="column"
 				h="90vh">
+				<Text
+					fontWeight="medium"
+					fontSize={32}
+					textAlign="center">
+					{username} (You)
+				</Text>
+				<Text
+					mb={4}
+					fontSize={24}
+					color="gray.500"
+					textAlign="center">
+					Word: #{Object.keys(room.game[username]!).length}
+				</Text>
 				<Grid
 					templateColumns="repeat(5, min-content)"
 					gap={1.5}
@@ -205,7 +232,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				</Grid>
 				{/* <Keyboard /> */}
 			</Center>
-		</Center>
+		</Flex>
 	)
 }
 
