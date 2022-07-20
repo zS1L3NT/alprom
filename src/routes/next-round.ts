@@ -1,20 +1,20 @@
 import { FieldValue } from "firebase-admin/firestore"
-import { NUMBER, OBJECT, STRING } from "validate-any"
+import { OBJECT, STRING } from "validate-any"
 
 import { roomsColl } from "../apis"
 import { Route } from "../setup"
 import wordlist from "../wordlist.json"
 
-export class POST extends Route<{ code: number; username: string }, {}> {
+export class POST extends Route<{ code: string; username: string }, {}> {
 	override bodyValidator = OBJECT({
-		code: NUMBER(),
+		code: STRING(),
 		username: STRING()
 	})
 
 	async handle() {
 		const { code, username } = this.body
 
-		const roomDoc = roomsColl.doc(`${code}`)
+		const roomDoc = roomsColl.doc(code)
 		const snap = await roomDoc.get()
 		if (!snap.exists) {
 			return this.throw(`Could not find one room with the code: ${code}`)
