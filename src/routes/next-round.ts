@@ -1,4 +1,4 @@
-import { FieldValue } from "firebase-admin/firestore"
+import { FieldValue, Timestamp } from "firebase-admin/firestore"
 import { OBJECT, STRING } from "validate-any"
 
 import { roomsColl } from "../apis"
@@ -40,7 +40,8 @@ export class POST extends Route<{ code: string; username: string }, {}> {
 			await roomDoc.update({
 				words: [newWord],
 				//@ts-ignore
-				game: room.game
+				game: room.game,
+				startedAt: Timestamp.now()
 			})
 
 			return this.respond({ word: newWord })
