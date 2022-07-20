@@ -41,9 +41,10 @@ const Keyboard: FC<
 		word: string
 		letters: string[]
 		submittedLetters: string[]
+		handleKey: (letter: string) => void
 	}>
 > = props => {
-	const { word, letters, submittedLetters } = props
+	const { word, letters, submittedLetters, handleKey } = props
 
 	const [guesses, setGuesses] = useState(getGuesses(word, letters))
 
@@ -81,6 +82,7 @@ const Keyboard: FC<
 						key={key}
 						letter={key}
 						guess={getKeyGuess(key)}
+						handleKey={handleKey}
 					/>
 				))}
 			</HStack>
@@ -90,6 +92,7 @@ const Keyboard: FC<
 						key={key}
 						letter={key}
 						guess={getKeyGuess(key)}
+						handleKey={handleKey}
 					/>
 				))}
 			</HStack>
@@ -102,7 +105,8 @@ const Keyboard: FC<
 					borderColor="transparent"
 					borderRadius={2}
 					bg="hsl(200, 1%, 51%)"
-					color="white">
+					color="white"
+					onClick={() => handleKey("ENTER")}>
 					ENTER
 				</Button>
 				{keys.slice(19, 27).map((key, i) => (
@@ -110,6 +114,7 @@ const Keyboard: FC<
 						key={key}
 						letter={key}
 						guess={getKeyGuess(key)}
+						handleKey={handleKey}
 					/>
 				))}
 				<Button
@@ -119,7 +124,8 @@ const Keyboard: FC<
 					borderColor="transparent"
 					borderRadius={2}
 					bg="hsl(200, 1%, 51%)"
-					color="white">
+					color="white"
+					onClick={() => handleKey("BACKSPACE")}>
 					<Icon
 						boxSize={6}
 						as={FaBackspace}

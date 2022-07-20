@@ -8,9 +8,10 @@ const Key: FC<
 	PropsWithChildren<{
 		letter: string
 		guess: Guess | null
+		handleKey: (letter: string) => void
 	}>
 > = props => {
-	const { letter, guess } = props
+	const { letter, guess, handleKey } = props
 
 	const [color, setColor] = useState("hsl(200, 1%, 51%)")
 
@@ -39,7 +40,8 @@ const Key: FC<
 			border="1px"
 			borderColor="transparent"
 			bg={color}
-			color="white">
+			color="white"
+			onClick={() => handleKey(letter)}>
 			{letter}
 		</Button>
 	)

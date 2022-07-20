@@ -99,60 +99,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 
 	useEffect(() => {
 		const handler = async (e: KeyboardEvent) => {
-			if (roomRef === null || room === null || username === null || word === null) return
-
-			switch (e.key) {
-				case "Backspace":
-					setLetterChunks(letters => {
-						if (letters.length === 0) return [[]]
-
-						const row = letters.at(-1)!
-						if (row.length === 1) return [...letters.slice(0, -1), []]
-
-						return [...letters.slice(0, -1), row.slice(0, -1)]
-					})
-					break
-				case "Enter":
-					setLetterChunks(letters => {
-						if (letters.at(-1)!.length === 5) {
-							updateDoc(roomRef, `game.${username}.${word}`, [
-								...room!.game[username]![word]!,
-								...letters.at(-1)!
-							])
-							if (letters.length < 6) {
-								return [...letters, []]
-							} else {
-								setIsLoading.on()
-								axios
-									.post("http://alprom.zectan.com/api/next-round", {
-										code: room!.code,
-										username
-									})
-									.finally(setIsLoading.off)
-								return letters
-							}
-						} else {
-							return letters
-						}
-					})
-					break
-				default:
-					const key = e.key.toUpperCase()
-					if (alphabet.includes(key)) {
-						setLetterChunks(letters => {
-							if (letters.length === 1) {
-								if (letters[0]!.length === 0) return [[key]]
-								if (letters[0]!.length === 5) return letters
-								return [[...letters[0]!, key]]
-							}
-
-							if (letters.at(-1)!.length === 5) return letters
-
-							return [...letters.slice(0, -1), [...letters.at(-1)!, key]]
-						})
-					}
-					break
-			}
+			handleKey(e.key.toUpperCase())
 		}
 
 		window.addEventListener("keydown", handler)
@@ -161,6 +108,62 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 			window.removeEventListener("keydown", handler)
 		}
 	}, [roomRef, room, username, word])
+
+	const handleKey = (key: string) => {
+		if (roomRef === null || room === null || username === null || word === null) return
+
+		switch (key) {
+			case "BACKSPACE":
+				setLetterChunks(letters => {
+					if (letters.length === 0) return [[]]
+
+					const row = letters.at(-1)!
+					if (row.length === 1) return [...letters.slice(0, -1), []]
+
+					return [...letters.slice(0, -1), row.slice(0, -1)]
+				})
+				break
+			case "ENTER":
+				setLetterChunks(letters => {
+					if (letters.at(-1)!.length === 5) {
+						updateDoc(roomRef, `game.${username}.${word}`, [
+							...room!.game[username]![word]!,
+							...letters.at(-1)!
+						])
+						if (letters.length < 6) {
+							return [...letters, []]
+						} else {
+							setIsLoading.on()
+							axios
+								.post("http://alprom.zectan.com/api/next-round", {
+									code: room!.code,
+									username
+								})
+								.finally(setIsLoading.off)
+							return letters
+						}
+					} else {
+						return letters
+					}
+				})
+				break
+			default:
+				if (alphabet.includes(key)) {
+					setLetterChunks(letters => {
+						if (letters.length === 1) {
+							if (letters[0]!.length === 0) return [[key]]
+							if (letters[0]!.length === 5) return letters
+							return [[...letters[0]!, key]]
+						}
+
+						if (letters.at(-1)!.length === 5) return letters
+
+						return [...letters.slice(0, -1), [...letters.at(-1)!, key]]
+					})
+				}
+				break
+		}
+	}
 
 	if (username === null || room === null || word === null) {
 		return <Spinner />
@@ -248,6 +251,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						word={word}
 						letters={letterChunks.flat()}
 						submittedLetters={room.game[username]![word]!}
+						handleKey={handleKey}
 					/>
 				</Center>
 			</Flex>
@@ -255,8 +259,8 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				<Center
 					pos="absolute"
 					top={0}
-					w="100%"
-					h="100%"
+					w={isLoading ? "100%" : 0}
+					h={isLoading ? "100%" : 0}
 					bg="black"
 					opacity="0.5">
 					<Spinner />
