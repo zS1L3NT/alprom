@@ -7,6 +7,7 @@ import {
 	Box, Center, Fade, Flex, Grid, SimpleGrid, Spinner, Text, useBoolean, useToast
 } from "@chakra-ui/react"
 
+import Keyboard from "../components/Keyboard"
 import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
 import getGuesses from "../functions/getGuesses"
@@ -136,20 +137,18 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					})
 					break
 				default:
-					if (alphabet.includes(e.key.toUpperCase())) {
+					const key = e.key.toUpperCase()
+					if (alphabet.includes(key)) {
 						setLetterChunks(letters => {
 							if (letters.length === 1) {
-								if (letters[0]!.length === 0) return [[e.key.toLowerCase()]]
+								if (letters[0]!.length === 0) return [[key]]
 								if (letters[0]!.length === 5) return letters
-								return [[...letters[0]!, e.key.toLowerCase()]]
+								return [[...letters[0]!, key]]
 							}
 
 							if (letters.at(-1)!.length === 5) return letters
 
-							return [
-								...letters.slice(0, -1),
-								[...letters.at(-1)!, e.key.toLowerCase()]
-							]
+							return [...letters.slice(0, -1), [...letters.at(-1)!, key]]
 						})
 					}
 					break
@@ -245,7 +244,11 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 							)
 						})}
 					</Grid>
-					{/* <Keyboard /> */}
+					<Keyboard
+						word={word}
+						letters={letterChunks.flat()}
+						submittedLetters={room.game[username]![word]!}
+					/>
 				</Center>
 			</Flex>
 			<Fade in={isLoading}>
