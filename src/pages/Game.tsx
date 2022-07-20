@@ -18,7 +18,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	const [roomRef, setRoomRef] = useState<DocumentReference<iRoom> | null>(null)
 	const [room, setRoom] = useState<iRoom | null>(null)
 	const [word, setWord] = useState<string | null>(null)
-	const [letters, setLetters] = useState<string[][]>([[]])
+	const [letterChunks, setLetterChunks] = useState<string[][]>([[]])
 
 	const alphabet = Array.from(Array(26)).map((_, i) => String.fromCharCode(i + 65))
 
@@ -47,7 +47,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	}, [username, location])
 
 	useEffect(() => {
-		if (roomRef === null || username === null) return
+		if (roomRef === null || username === null || word === null) return
 
 		return onSnapshot(roomRef, doc => {
 			if (doc.exists()) {
@@ -55,6 +55,19 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 
 				if (username in room.game) {
 					setRoom(doc.data())
+
+					const letters = doc.data().game[username]![word]!
+					const letterChunks = []
+
+					for (let i = 0; i < letters.length; i += 5) {
+						letterChunks.push(letters.slice(i, i + 5))
+					}
+
+					if (letterChunks.length < 6) {
+						letterChunks.push([])
+					}
+
+					setLetterChunks(letterChunks)
 				} else {
 					navigate("/")
 					toast({
@@ -74,7 +87,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				})
 			}
 		})
-	}, [roomRef, username])
+	}, [roomRef, username, word])
 
 	useEffect(() => {
 		if (roomRef === null || room === null || username === null || word === null) return
@@ -82,7 +95,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 		const handler = async (e: KeyboardEvent) => {
 			switch (e.key) {
 				case "Backspace":
-					setLetters(letters => {
+					setLetterChunks(letters => {
 						if (letters.length === 0) return [[]]
 
 						const row = letters.at(-1)!
@@ -92,7 +105,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					})
 					break
 				case "Enter":
-					setLetters(letters => {
+					setLetterChunks(letters => {
 						if (letters.at(-1)!.length === 5) {
 							updateDoc(roomRef, `game.${username}.${word}`, [
 								...room!.game[username]![word]!,
@@ -110,7 +123,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					break
 				default:
 					if (alphabet.includes(e.key.toUpperCase())) {
-						setLetters(letters => {
+						setLetterChunks(letters => {
 							if (letters.length === 1) {
 								if (letters[0]!.length === 0) return [[e.key.toLowerCase()]]
 								if (letters[0]!.length === 5) return letters
@@ -179,12 +192,12 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					templateColumns="repeat(5, min-content)"
 					gap={1.5}
 					marginBottom={5}>
-					{getGuesses(word, letters.flat()).map((guess, i) => {
+					{getGuesses(word, letterChunks.flat()).map((guess, i) => {
 						return (
 							<LetterSquare
 								key={i}
 								guess={!!room.game[username]![word]![i] ? guess : null}
-								letter={letters[(i / 5) | 0]?.[i % 5] ?? ""}
+								letter={letterChunks[(i / 5) | 0]?.[i % 5] ?? ""}
 								isSmall={false}
 							/>
 						)
