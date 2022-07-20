@@ -11,7 +11,7 @@ export interface iRoom {
 	owner: string
 	code: string
 	words: string[]
-	game: Record<string, Record<string, Array<Array<Guess>>>>
+	game: Record<string, Record<string, Array<Guess>>>
 }
 
 export const roomConverter: FirestoreDataConverter<iRoom> = {

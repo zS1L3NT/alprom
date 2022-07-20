@@ -56,7 +56,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				if (username in room.game) {
 					setRoom(doc.data())
 				} else {
-					// navigate("/")
+					navigate("/")
 					toast({
 						title: "Kicked from room",
 						description: "Someone removed you from the game",
@@ -65,7 +65,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					})
 				}
 			} else {
-				// navigate("/")
+				navigate("/")
 				toast({
 					title: "Room Closed",
 					description: "The game room has been closed",
@@ -91,7 +91,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					{Object.entries(room.game ?? {}).map(([username, data]) => {
 						const word = room.words[Object.keys(data).length - 1]!
 						const guesses = [
-							...data[word]!.flat(),
+							...data[word]!,
 							...Array.from<null>(Array(30 - data[word]!.length * 5)).fill(null)
 						]
 
