@@ -4,7 +4,7 @@
 	"license": "GPL-3.0",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build --base=/alprom && echo alprom.tnitish.com > dist/CNAME",
+		"build": "tsc && vite build && echo alprom.tnitish.com > dist/CNAME",
 		"preview": "vite preview",
 		"predeploy": "npm run build",
 		"deploy": "gh-pages -d dist"
