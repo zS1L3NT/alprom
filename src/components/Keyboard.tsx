@@ -1,49 +1,99 @@
-import Key from "./Key"
-import { Button, HStack, Icon, VStack } from "@chakra-ui/react"
+import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { FaBackspace } from "react-icons/fa"
 
-type KeysData = { letter: string; state: 0 | 1 | 2 | 3 }[]
+import { Button, HStack, Icon, VStack } from "@chakra-ui/react"
 
-const Keyboard = () => {
-	const keysmap = [
-		{ letter: "Q", state: 0 },
-		{ letter: "W", state: 0 },
-		{ letter: "E", state: 0 },
-		{ letter: "R", state: 0 },
-		{ letter: "T", state: 0 },
-		{ letter: "Y", state: 0 },
-		{ letter: "U", state: 0 },
-		{ letter: "I", state: 0 },
-		{ letter: "O", state: 0 },
-		{ letter: "P", state: 0 },
-		{ letter: "A", state: 0 },
-		{ letter: "S", state: 0 },
-		{ letter: "D", state: 0 },
-		{ letter: "F", state: 0 },
-		{ letter: "G", state: 0 },
-		{ letter: "H", state: 0 },
-		{ letter: "J", state: 0 },
-		{ letter: "K", state: 0 },
-		{ letter: "L", state: 0 },
-		{ letter: "Z", state: 0 },
-		{ letter: "X", state: 0 },
-		{ letter: "C", state: 0 },
-		{ letter: "V", state: 0 },
-		{ letter: "B", state: 0 },
-		{ letter: "N", state: 0 },
-		{ letter: "M", state: 0 },
-	] as KeysData
+import getGuesses from "../functions/getGuesses"
+import { Guess } from "../models/Room"
+import Key from "./Key"
+
+const keys = [
+	"Q",
+	"W",
+	"E",
+	"R",
+	"T",
+	"Y",
+	"U",
+	"I",
+	"O",
+	"P",
+	"A",
+	"S",
+	"D",
+	"F",
+	"G",
+	"H",
+	"J",
+	"K",
+	"L",
+	"Z",
+	"X",
+	"C",
+	"V",
+	"B",
+	"N",
+	"M"
+]
+
+const Keyboard: FC<
+	PropsWithChildren<{
+		word: string
+		letters: string[]
+		submittedLetters: string[]
+		handleKey: (letter: string) => void
+	}>
+> = props => {
+	const { word, letters, submittedLetters, handleKey } = props
+
+	const [guesses, setGuesses] = useState(getGuesses(word, letters))
+
+	useEffect(() => {
+		setGuesses(getGuesses(word, letters))
+	}, [word, letters])
+
+	const getKeyGuess = (key: string): Guess | null => {
+		if (letters.includes(key)) {
+			const is = letters
+				.map((letter, i) => (letter === key ? i : null))
+				.filter(i => i !== null) as number[]
+
+			let guess: Guess | null = null
+			for (const i of is) {
+				const guess_ = guesses[i]
+				if (!guess_ || !submittedLetters[i]) continue
+
+				if (guess_ === Guess.Correct) return Guess.Correct
+				else guess = guess_
+			}
+
+			return guess
+		}
+		return null
+	}
 
 	return (
-		<VStack justify="center" spacing={1.5}>
+		<VStack
+			justify="center"
+			spacing={1.5}>
 			<HStack spacing={1.5}>
-				{keysmap.slice(0, 10).map((key, index) => (
-					<Key letter={key.letter} state={key.state} key={index} />
+				{keys.slice(0, 10).map((key, i) => (
+					<Key
+						key={key}
+						letter={key}
+						guess={getKeyGuess(key)}
+						handleKey={handleKey}
+					/>
 				))}
 			</HStack>
 			<HStack spacing={1.5}>
-				{keysmap.slice(10, 19).map((key, index) => (
-					<Key letter={key.letter} state={key.state} key={index} />
+				{keys.slice(10, 19).map((key, i) => (
+					<Key
+						key={key}
+						letter={key}
+						guess={getKeyGuess(key)}
+						handleKey={handleKey}
+					/>
 				))}
 			</HStack>
 			<HStack spacing={1.5}>
@@ -55,11 +105,17 @@ const Keyboard = () => {
 					borderColor="transparent"
 					borderRadius={2}
 					bg="hsl(200, 1%, 51%)"
-					color="white">
+					color="white"
+					onClick={() => handleKey("ENTER")}>
 					ENTER
 				</Button>
-				{keysmap.slice(19, 27).map((key, index) => (
-					<Key letter={key.letter} state={key.state} key={index} />
+				{keys.slice(19, 27).map((key, i) => (
+					<Key
+						key={key}
+						letter={key}
+						guess={getKeyGuess(key)}
+						handleKey={handleKey}
+					/>
 				))}
 				<Button
 					h="60px"
@@ -68,8 +124,12 @@ const Keyboard = () => {
 					borderColor="transparent"
 					borderRadius={2}
 					bg="hsl(200, 1%, 51%)"
-					color="white">
-					<Icon boxSize={6} as={FaBackspace} />
+					color="white"
+					onClick={() => handleKey("BACKSPACE")}>
+					<Icon
+						boxSize={6}
+						as={FaBackspace}
+					/>
 				</Button>
 			</HStack>
 		</VStack>

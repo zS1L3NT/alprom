@@ -1,189 +1,230 @@
-import getNextRound from "../functions/getNextRound"
-import { firestore } from "../firebase"
-import { onRoomUpdate, setWord } from "../app/slices/room"
-import { useAppDispatch } from "../hooks/useAppDispatch"
-import { useAppSelector } from "../hooks/useAppSelector"
-import { useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import axios from "axios"
 import {
-	collection,
-	deleteDoc,
-	deleteField,
-	doc,
-	onSnapshot,
-	setDoc,
+	deleteDoc, deleteField, doc, DocumentReference, onSnapshot, updateDoc
 } from "firebase/firestore"
+import { useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+
 import {
-	Button,
-	Center,
-	ListItem,
-	OrderedList,
-	Skeleton,
-	Text,
-	Tooltip,
-	useToast,
-	VStack,
+	Button, Center, Fade, ListItem, OrderedList, Skeleton, Spinner, Text, Tooltip, useBoolean,
+	useToast, VStack
 } from "@chakra-ui/react"
 
+import { roomsColl } from "../firebase"
+import { iRoom } from "../models/Room"
+
 const Lobby = () => {
-	const dispatch = useAppDispatch()
+	const location = useLocation()
 	const navigate = useNavigate()
 	const toast = useToast()
-	const room = useAppSelector(state => state.room)
+
+	const [isLoading, setIsLoading] = useBoolean()
+	const [username, setUsername] = useState<string | null>(null)
+	const [roomRef, setRoomRef] = useState<DocumentReference<iRoom> | null>(null)
+	const [room, setRoom] = useState<iRoom | null>(null)
 
 	useEffect(() => {
-		if (!room.code) return
+		if (username === null) {
+			const state = location.state as {
+				roomId: string
+				username: string
+			}
 
-		const unsub = onSnapshot(
-			doc(collection(firestore, "rooms"), `${room.code}`),
-			doc => {
-				if (doc.exists()) {
-					dispatch(onRoomUpdate(doc.data()))
+			if (state) {
+				setRoomRef(doc(roomsColl, state.roomId))
+				setUsername(state.username)
+			} else {
+				navigate("/")
+				toast({
+					title: "No lobby found",
+					description: "Could not re-enter the lobby page",
+					status: "error",
+					duration: 2500
+				})
+			}
+		}
+	}, [username, location])
+
+	useEffect(() => {
+		if (roomRef === null || username === null) return
+
+		return onSnapshot(roomRef, doc => {
+			if (doc.exists()) {
+				const room = doc.data()
+
+				if (username in room.game) {
+					if (Object.keys(room.game[username]!).length === 1) {
+						navigate("/game", {
+							state: {
+								username,
+								roomId: room.id,
+								word: room.words.at(-1)
+							}
+						})
+						toast({
+							title: "Game started",
+							description: `${room.owner} started the game`,
+							status: "success",
+							duration: 2500
+						})
+					} else {
+						setRoom(doc.data())
+					}
 				} else {
+					navigate("/")
 					toast({
-						title: "Error",
-						description: "Room closed!!",
+						title: "Removed from room",
+						description: "Someone removed you from the game room",
 						status: "error",
-						duration: 2500,
-						isClosable: true,
-						onCloseComplete: () => {
-							navigate("/")
-						},
+						duration: 2500
 					})
 				}
-			},
-		)
-
-		return unsub
-	}, [room?.code])
-
-	useEffect(() => {
-		if (room.scores?.[room.username]?.round === 1) {
-			navigate("/game")
-		}
-	}, [room?.scores])
+			} else {
+				navigate("/")
+				toast({
+					title: "Room Closed",
+					description: "The game room has been closed",
+					status: "error",
+					duration: 2500
+				})
+			}
+		})
+	}, [roomRef, username])
 
 	const startGame = async () => {
-		if (!room.code) return
-
-		const { word } = await getNextRound({
-			code: room.code,
-			username: room.username,
-		})
-
-		dispatch(setWord(word))
+		try {
+			setIsLoading.on()
+			await axios.post("http://alprom.zectan.com/api/next-round", {
+				code: room!.code,
+				username: username!
+			})
+		} catch (e) {
+			console.error(e)
+		} finally {
+			setIsLoading.off()
+		}
 	}
 
-	const closeRoom = async () => {
+	const removeFromRoom = async (username: string) => {
+		if (roomRef === null) return
+
 		try {
-			await deleteDoc(doc(collection(firestore, "rooms"), `${room.code}`))
-			navigate("/")
-		} catch (err) {
-			console.error(err)
-			toast({
-				title: "Error",
-				description: "Could not find the room you were looking for",
-				status: "error",
-				duration: 5000,
-				isClosable: true,
-				onCloseComplete: () => {
-					navigate("/")
-				},
-			})
+			await updateDoc(roomRef, `game.${username}`, deleteField())
+		} catch (e) {
+			console.error(e)
 		}
 	}
 
 	const leaveRoom = async () => {
-		try {
-			await setDoc(
-				doc(collection(firestore, "rooms"), `${room.code}`),
-				{
-					scores: {
-						[room.username]: deleteField(),
-					},
-				},
-				{ merge: true },
-			)
+		if (username !== null) {
+			await removeFromRoom(username)
 			navigate("/")
-		} catch (err) {
-			console.error(err)
-			toast({
-				title: "Error",
-				description: "Could not find the room you were looking for",
-				status: "error",
-				duration: 5000,
-				isClosable: true,
-				onCloseComplete: () => {
-					navigate("/")
-				},
-			})
+		}
+	}
+
+	const closeRoom = async () => {
+		if (roomRef === null) return
+
+		try {
+			await deleteDoc(roomRef)
+		} catch (e) {
+			console.error(e)
 		}
 	}
 
 	return (
-		<Center flexDir="column">
-			<VStack mb="2em" spacing={0}>
-				<Text fontSize="4xl" fontWeight="semibold">
-					Room Id
-				</Text>
-				<Skeleton isLoaded={!!room?.code}>
-					<Text fontSize="3xl" fontWeight="semibold">
-						{room ? room.code : "000000"}
+		<>
+			<Center flexDir="column">
+				<VStack
+					mb="2em"
+					spacing={0}>
+					<Text
+						fontSize="4xl"
+						fontWeight="semibold">
+						Room Id
 					</Text>
-				</Skeleton>
-			</VStack>
-			<VStack mb="5em">
-				<Text
-					textDecoration="underline"
-					fontSize="2xl"
-					fontWeight="semibold">
-					People in this lobby
-				</Text>
-				<OrderedList>
-					{Object.keys(room?.scores || {}).map((name, index) => (
-						<ListItem
-							key={index}
-							fontSize="xl"
-							_hover={{
-								textDecoration: "line-through",
-								textDecorationThickness: "3px",
-								cursor: "pointer",
-							}}>
-							{name}
-						</ListItem>
-					))}
-				</OrderedList>
-			</VStack>
-			<Tooltip
-				label="Only the room owner can start the game"
-				shouldWrapChildren
-				mb={2}
-				placement="top"
-				isDisabled={room?.owner === room?.username}>
+					<Skeleton isLoaded={!!room?.code}>
+						<Text
+							fontSize="3xl"
+							fontWeight="semibold">
+							{room ? room.code : "000000"}
+						</Text>
+					</Skeleton>
+				</VStack>
+				<VStack mb="5em">
+					<Text
+						textDecoration="underline"
+						fontSize="2xl"
+						fontWeight="semibold">
+						People in this lobby
+					</Text>
+					<OrderedList>
+						{Object.keys(room?.game || {})
+							.sort()
+							.map((name, index) => (
+								<ListItem
+									key={index}
+									fontSize="xl"
+									_hover={
+										room?.owner === username && name !== username
+											? {
+													textDecoration: "line-through",
+													textDecorationThickness: "3px",
+													cursor: "pointer"
+											  }
+											: {}
+									}
+									onClick={() => {
+										if (room?.owner === username && name !== username) {
+											removeFromRoom(name)
+										}
+									}}>
+									{name}
+								</ListItem>
+							))}
+					</OrderedList>
+				</VStack>
+				<Tooltip
+					label="Only the room owner can start the game"
+					shouldWrapChildren
+					mb={2}
+					placement="top"
+					isDisabled={room?.owner === username}>
+					<Button
+						size="lg"
+						w="lg"
+						mb={5}
+						isDisabled={room?.owner !== username}
+						bgColor="correct"
+						_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
+						_active={{ bgColor: "hsl(115, 29%, 30%)" }}
+						onClick={startGame}>
+						Start Game
+					</Button>
+				</Tooltip>
 				<Button
-					size="lg"
-					w="lg"
-					mb={5}
-					isDisabled={room?.owner !== room?.username}
-					bgColor="correct"
-					_hover={{ bgColor: "hsl(115, 29%, 35%)" }}
-					_active={{ bgColor: "hsl(115, 29%, 30%)" }}
-					onClick={startGame}>
-					Start Game
+					size="md"
+					w="xs"
+					bgColor="hsl(0, 70%, 53%)"
+					_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
+					_active={{ bgColor: "hsl(0, 70%, 40%)" }}
+					onClick={room?.owner === username ? closeRoom : leaveRoom}>
+					{room?.owner === username ? "Close room" : "Leave room"}
 				</Button>
-			</Tooltip>
-			<Button
-				size="md"
-				w="xs"
-				bgColor="hsl(0, 70%, 53%)"
-				_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
-				_active={{ bgColor: "hsl(0, 70%, 40%)" }}
-				onClick={
-					room?.owner === room?.username ? closeRoom : leaveRoom
-				}>
-				{room?.owner === room?.username ? "Close room" : "Leave room"}
-			</Button>
-		</Center>
+			</Center>
+			<Fade in={isLoading}>
+				<Center
+					pos="absolute"
+					top={0}
+					left={0}
+					w={isLoading ? "100%" : 0}
+					h={isLoading ? "100%" : 0}
+					bg="black"
+					opacity="0.5">
+					<Spinner />
+				</Center>
+			</Fade>
+		</>
 	)
 }
 

@@ -1,238 +1,425 @@
-import getWordStates from "../functions/getWordStates"
-import Keyboard from "../components/Keyboard"
-import LetterBox from "../components/LetterBox"
-import { Center, Grid, SimpleGrid, useToast } from "@chakra-ui/react"
-import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore"
-import { firestore } from "../firebase"
-import { onRoomUpdate, setWord } from "../app/slices/room"
-import { useAppDispatch } from "../hooks/useAppDispatch"
-import { useAppSelector } from "../hooks/useAppSelector"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { wordList } from "../dictionary"
+import axios from "axios"
+import { deleteDoc, doc, DocumentReference, onSnapshot, updateDoc } from "firebase/firestore"
+import { DateTime } from "luxon"
+import { FC, PropsWithChildren, useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+
 import {
-	nextRow,
-	popLetter,
-	pushLetter,
-	updateColors,
-} from "../app/slices/letters"
+	Badge, Box, Button, Center, chakra, Container, Divider, Fade, Flex, Grid, SimpleGrid, Spinner,
+	Text, useBoolean, useToast
+} from "@chakra-ui/react"
 
-const Game = () => {
-	const toast = useToast()
+import Keyboard from "../components/Keyboard"
+import LetterSquare from "../components/LetterSquare"
+import { roomsColl } from "../firebase"
+import getGuesses from "../functions/getGuesses"
+import useForceRerender from "../hooks/useForceRerender"
+import { Guess, iRoom } from "../models/Room"
+import words from "../words.json"
+
+const Game: FC<PropsWithChildren<{}>> = props => {
+	const forceRerender = useForceRerender()
+	const location = useLocation()
 	const navigate = useNavigate()
-	const dispatch = useAppDispatch()
-	const room = useAppSelector(state => state.room)
-	const currentRow = useAppSelector(state => state.letters.row)
-	const currentWordRaw = useAppSelector(
-		state => state.letters.data[currentRow],
-	)
-	const wordArrays = useAppSelector(state => state.letters)
-	const [isValid, setIsValid] = useState<boolean | null>(null)
-	const [currentWord, setCurrentWord] = useState("")
+	const toast = useToast()
 
-	const alphabet = [
-		"a",
-		"b",
-		"c",
-		"d",
-		"e",
-		"f",
-		"g",
-		"h",
-		"i",
-		"j",
-		"k",
-		"l",
-		"m",
-		"n",
-		"o",
-		"p",
-		"q",
-		"r",
-		"s",
-		"t",
-		"u",
-		"v",
-		"w",
-		"x",
-		"y",
-		"z",
-	]
+	const [isLoading, setIsLoading] = useBoolean()
+	const [username, setUsername] = useState<string | null>(null)
+	const [roomRef, setRoomRef] = useState<DocumentReference<iRoom> | null>(null)
+	const [room, setRoom] = useState<iRoom | null>(null)
+	const [word, setWord] = useState<string | null>(null)
+	const [letterChunks, setLetterChunks] = useState<string[][]>([[]])
+	const [endTime, setEndTime] = useState<DateTime | null>(null)
+
+	const alphabet = Array.from(Array(26)).map((_, i) => String.fromCharCode(i + 65))
 
 	useEffect(() => {
-		if (!room.code) return
+		if (username === null) {
+			const state = location.state as {
+				username: string
+				roomId: string
+				word: string
+			}
 
-		getDoc(doc(collection(firestore, "rooms"), `${room.code}`)).then(
-			doc => {
-				if (doc.exists()) {
-					dispatch(setWord(doc.data().words[0]))
-				}
-			},
-		)
-	}, [room?.code])
-
-	useEffect(() => {
-		setCurrentWord(
-			currentWordRaw
-				.map(l => l.letter)
-				.join("")
-				.toLowerCase(),
-		)
-	}, [currentWordRaw])
-
-	useEffect(() => {
-		if (!room.code) return
-
-		const unsub = onSnapshot(
-			doc(collection(firestore, "rooms"), `${room.code}`),
-			doc => {
-				if (doc.exists()) {
-					dispatch(onRoomUpdate(doc.data()))
-				} else {
-					toast({
-						title: "Error",
-						description: "Room closed!!",
-						status: "error",
-						duration: 2500,
-						isClosable: true,
-						onCloseComplete: () => {
-							navigate("/")
-						},
-					})
-				}
-			},
-		)
-
-		return unsub
-	}, [room?.code])
-
-	useEffect(() => {
-		if (currentWord.length == 5) {
-			setIsValid(wordList.includes(currentWord))
-		} else {
-			setIsValid(null)
-		}
-	}, [currentWord])
-
-	useEffect(() => {
-		const handler = async (event: KeyboardEvent) => {
-			switch (event.key) {
-				case "Backspace":
-					dispatch(popLetter())
-					break
-				case "Enter":
-					if (isValid) {
-						// code to check against answer word
-						const states = getWordStates(currentWord, room.word!)
-						dispatch(updateColors(states))
-						dispatch(nextRow())
-					} else if (isValid === null) {
-						setIsValid(false)
-					}
-					break
-				default:
-					if (alphabet.includes(event.key.toLowerCase())) {
-						dispatch(
-							pushLetter({
-								letter: event.key.toUpperCase(),
-								state: 0,
-							}),
-						)
-					}
-					break
+			if (state) {
+				setUsername(state.username)
+				setRoomRef(doc(roomsColl, state.roomId))
+				setWord(state.word)
+			} else {
+				navigate("/")
+				toast({
+					title: "No game found",
+					description: "Could not re-enter the game page",
+					status: "error",
+					duration: 2500
+				})
 			}
 		}
+	}, [username, location])
 
-		document.addEventListener("keydown", handler)
+	useEffect(() => {
+		if (roomRef === null || username === null || word === null) return
+
+		return onSnapshot(roomRef, doc => {
+			if (doc.exists()) {
+				const room = doc.data()
+
+				if (username in room.game) {
+					const answered = Object.keys(room.game[username]!).length - 1
+					const word = room.words[answered]!
+
+					setRoom(room)
+					setWord(word)
+					setEndTime(
+						endTime =>
+							endTime ??
+							DateTime.fromJSDate(room.startedAt!.toDate()).plus({
+								minutes: 1,
+								seconds: 15 * answered
+							})
+					)
+
+					const letters = room.game[username]![word]!
+					const letterChunks = []
+
+					for (let i = 0; i < letters.length; i += 5) {
+						letterChunks.push(letters.slice(i, i + 5))
+					}
+
+					if (letterChunks.length < 6) {
+						letterChunks.push([])
+					}
+
+					setLetterChunks(letterChunks)
+				} else {
+					navigate("/")
+					toast({
+						title: "Kicked from room",
+						description: "Someone removed you from the game",
+						status: "error",
+						duration: 2500
+					})
+				}
+			} else {
+				navigate("/")
+				toast({
+					title: "Room Closed",
+					description: "The game room has been closed",
+					status: "error",
+					duration: 2500
+				})
+			}
+		})
+	}, [roomRef, username, word])
+
+	useEffect(() => {
+		const handler = async (e: KeyboardEvent) => {
+			handleKey(e.key.toUpperCase())
+		}
+
+		window.addEventListener("keydown", handler)
 
 		return () => {
-			document.removeEventListener("keydown", handler)
+			window.removeEventListener("keydown", handler)
 		}
-	}, [currentWord, isValid])
+	}, [roomRef, room, username, word])
 
 	useEffect(() => {
-		isValid === false
-			? toast({
-					id: "invalid-word-toast",
-					title: "Invalid Word",
-					description: "The word you entered doesn't exist!",
-					status: "error",
-					isClosable: true,
-					position: "top-right",
-			  })
-			: toast.close("invalid-word-toast")
-	}, [isValid])
+		const interval = setInterval(forceRerender, 1000)
 
-	useEffect(() => {
-		if (!room.code) return
+		return () => {
+			clearInterval(interval)
+		}
+	}, [])
 
-		setDoc(
-			doc(collection(firestore, "rooms"), `${room.code}`),
-			{
-				scores: {
-					[room.username]: {
-						guesses: wordArrays.data.flat().map(d => d.state),
-					},
-				},
-			},
-			{ merge: true },
-		)
-	}, [room?.code, wordArrays.data])
+	const handleKey = (key: string) => {
+		if (
+			roomRef === null ||
+			room === null ||
+			username === null ||
+			word === null ||
+			endTime === null ||
+			endTime.diffNow().milliseconds < 0
+		) {
+			return
+		}
 
-	return (
-		<Center>
-			<SimpleGrid columns={2}>
-				{/* left side players */}
-				<SimpleGrid
-					columns={2}
-					columnGap={4}
-					rowGap={8}
-					paddingRight={8}>
-					{/* map player scores dictionary to 6x6 grid */}
-					{Object.keys(room.scores || {}).map((key, index) => {
-						// get each player's guesses
-						var guessesArr = room.scores![key].guesses
-						return (
-							<Grid
-								key={index}
-								templateColumns="repeat(5, min-content)"
-								gap={1.5}>
-								{Array(30)
-									.fill(0)
-									.map((_, i) =>
-										guessesArr == undefined ? (
-											<></>
-										) : (
-											<LetterBox
-												key={`${index}-${i}`}
-												state={guessesArr[i]}
-												isSmall={true}
-											/>
-										),
-									)}
-							</Grid>
-						)
-					})}
-				</SimpleGrid>
-			</SimpleGrid>
+		switch (key) {
+			case "BACKSPACE":
+				toast.close("invalid-word-toast")
+				setLetterChunks(letterChunks => {
+					if (letterChunks.length === 0) return [[]]
 
-			{/* main grid and keyboard */}
-			<Center flexDirection="column" h="90vh">
-				<Grid
-					templateColumns="repeat(5, min-content)"
-					gap={1.5}
-					marginBottom={5}>
-					{wordArrays.data.flat().map((letter, index) => (
-						<LetterBox
-							key={index}
-							state={letter.state}
-							letter={letter.letter}
-						/>
-					))}
-				</Grid>
-				<Keyboard />
+					const row = letterChunks.at(-1)!
+					if (row.length === 1) return [...letterChunks.slice(0, -1), []]
+
+					return [...letterChunks.slice(0, -1), row.slice(0, -1)]
+				})
+				break
+			case "ENTER":
+				setLetterChunks(letterChunks => {
+					if (letterChunks.at(-1)!.length === 5) {
+						if (!words.includes(letterChunks.at(-1)!.join("").toLowerCase())) {
+							toast.close("invalid-word-toast")
+							setTimeout(() => {
+								toast({
+									id: "invalid-word-toast",
+									title: "Invalid Word",
+									description: "The word you entered doesn't exist!",
+									position: "top-right",
+									status: "error",
+									isClosable: true
+								})
+							}, 0)
+							return letterChunks
+						} else {
+							toast.close("invalid-word-toast")
+						}
+
+						updateDoc(roomRef, `game.${username}.${word}`, [
+							...room!.game[username]![word]!,
+							...letterChunks.at(-1)!
+						])
+
+						const correct = getGuesses(word, letterChunks.flat())
+							.filter(guess => guess !== null)
+							.slice(-5)
+							.every(guess => guess === Guess.Correct)
+
+						if (letterChunks.length === 6 || correct) {
+							setEndTime(endTime => endTime!.plus({ seconds: correct ? 15 : 0 }))
+							setIsLoading.on()
+							axios
+								.post("http://alprom.zectan.com/api/next-round", {
+									code: room!.code,
+									username
+								})
+								.finally(setIsLoading.off)
+							return letterChunks
+						} else {
+							return [...letterChunks, []]
+						}
+					} else {
+						return letterChunks
+					}
+				})
+				break
+			default:
+				toast.close("invalid-word-toast")
+				if (alphabet.includes(key)) {
+					setLetterChunks(letterChunks => {
+						if (letterChunks.length === 1) {
+							if (letterChunks[0]!.length === 0) return [[key]]
+							if (letterChunks[0]!.length === 5) return letterChunks
+							return [[...letterChunks[0]!, key]]
+						}
+
+						if (letterChunks.at(-1)!.length === 5) return letterChunks
+
+						return [...letterChunks.slice(0, -1), [...letterChunks.at(-1)!, key]]
+					})
+				}
+				break
+		}
+	}
+
+	const leaveGame = async () => {
+		navigate("/")
+	}
+
+	const closeGame = async () => {
+		if (roomRef === null) return
+
+		try {
+			await deleteDoc(roomRef)
+		} catch (e) {
+			console.error(e)
+		}
+	}
+
+	if (username === null || room === null || word === null || endTime === null) {
+		return (
+			<Center>
+				<Spinner />
 			</Center>
+		)
+	}
+
+	return endTime.diffNow().milliseconds < 0 ? (
+		<Center flexDirection="column">
+			<Container
+				p={6}
+				bg="hsl(240, 3%, 12%)"
+				rounded="lg">
+				<Text
+					fontSize={36}
+					fontWeight="bold">
+					Results
+				</Text>
+				<Divider my={4} />
+				{Object.entries(room.game)
+					.map<[string, number | null]>(([username, data]) => [
+						username,
+						DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
+							.milliseconds >
+						60000 + 15000 * (Object.keys(data).length - 1)
+							? Object.entries(data)
+									.map(([word, letters]) => letters.slice(-5).join("") === word)
+									.filter(res => !!res).length
+							: null
+					])
+					.sort((a, b) => {
+						if ((a[1] ?? 0) > (b[1] ?? 0)) return -1
+						if ((b[1] ?? 0) > (a[1] ?? 0)) return 1
+
+						return a[0].localeCompare(b[0])
+					})
+					.map(([username_, score], i) => (
+						<Text
+							key={username_}
+							display="flex"
+							fontSize={20}>
+							<chakra.b mr={1}>{i + 1}.</chakra.b>
+							{username_}
+							{username_ === username ? (
+								<Badge
+									mx={1}
+									my="auto">
+									{" "}
+									(You)
+								</Badge>
+							) : (
+								<></>
+							)}
+							{" - "}
+							<chakra.i ml={1}>{score ?? "(in game)"}</chakra.i>
+						</Text>
+					))}
+			</Container>
+			<Button
+				size="md"
+				w="xs"
+				mt={4}
+				bgColor="hsl(0, 70%, 53%)"
+				_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
+				_active={{ bgColor: "hsl(0, 70%, 40%)" }}
+				onClick={room.owner === username ? closeGame : leaveGame}>
+				{room.owner === username ? "Close game" : "Leave game"}
+			</Button>
 		</Center>
+	) : (
+		<>
+			<Flex
+				justifyContent="space-evenly"
+				alignItems="center">
+				<Flex direction="column">
+					<Text
+						textAlign="center"
+						fontSize={48}
+						fontWeight="bold"
+						px={4}
+						mb={4}
+						mx="auto"
+						w="180px"
+						borderWidth="1px"
+						borderRadius={8}>
+						{(((endTime.diffNow().milliseconds / 60000) | 0) + "").padStart(2, "0")}:
+						{(((endTime.diffNow().milliseconds / 1000) % 60 | 0) + "").padStart(2, "0")}
+					</Text>
+					<SimpleGrid
+						w="fit-content"
+						columns={2}
+						columnGap={4}
+						rowGap={8}>
+						{Object.entries(room.game)
+							.filter(entry => entry[0] !== username)
+							.map(([username, data]) => {
+								const word = room.words[Object.keys(data).length - 1]!
+								const guesses = getGuesses(word, data[word]!)
+
+								return (
+									<Box key={username}>
+										<Text
+											fontWeight="medium"
+											fontSize={20}
+											textAlign="center">
+											{username}
+										</Text>
+										<Text
+											mb={1}
+											fontSize={16}
+											color="gray.500"
+											textAlign="center">
+											Word: #{Object.keys(data).length}
+										</Text>
+										<Grid
+											templateColumns="repeat(5, min-content)"
+											gap={1.5}>
+											{guesses.map((guess, i) => (
+												<LetterSquare
+													key={i}
+													guess={guess}
+													letter=""
+													isSmall={true}
+												/>
+											))}
+										</Grid>
+									</Box>
+								)
+							})}
+					</SimpleGrid>
+				</Flex>
+				<Flex
+					direction="column"
+					alignItems="center">
+					<Text
+						fontWeight="medium"
+						fontSize={32}
+						textAlign="center">
+						{username} (You)
+					</Text>
+					<Text
+						mb={4}
+						fontSize={24}
+						color="gray.500"
+						textAlign="center">
+						Word: #{Object.keys(room.game[username]!).length}
+					</Text>
+					<Grid
+						templateColumns="repeat(5, min-content)"
+						gap={1.5}
+						marginBottom={5}>
+						{getGuesses(word, letterChunks.flat()).map((guess, i) => {
+							return (
+								<LetterSquare
+									key={i}
+									guess={!!room.game[username]![word]![i] ? guess : null}
+									letter={letterChunks[(i / 5) | 0]?.[i % 5] ?? ""}
+									isSmall={false}
+								/>
+							)
+						})}
+					</Grid>
+					<Keyboard
+						word={word}
+						letters={letterChunks.flat()}
+						submittedLetters={room.game[username]![word]!}
+						handleKey={handleKey}
+					/>
+				</Flex>
+			</Flex>
+			<Fade in={isLoading}>
+				<Center
+					pos="absolute"
+					top={0}
+					w={isLoading ? "100%" : 0}
+					h={isLoading ? "100%" : 0}
+					bg="black"
+					opacity="0.5">
+					<Spinner />
+				</Center>
+			</Fade>
+		</>
 	)
 }
 

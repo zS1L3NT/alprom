@@ -1,7 +1,9 @@
-import { Center, Image } from "@chakra-ui/react"
+import { FC, PropsWithChildren } from "react"
 import { useNavigate } from "react-router-dom"
 
-const Navbar = () => {
+import { Center, Image } from "@chakra-ui/react"
+
+const _Navbar: FC<PropsWithChildren<{}>> = () => {
 	const navigate = useNavigate()
 
 	return (
@@ -13,7 +15,7 @@ const Navbar = () => {
 			objectFit="contain">
 			<Image
 				h={8}
-				src="./assets/Alprom-logo.svg"
+				src="./assets/logo.svg"
 				transition="all 0.3s ease-out"
 				_hover={{ opacity: 0.7, cursor: "pointer" }}
 				onClick={() => navigate("/")}
@@ -22,4 +24,4 @@ const Navbar = () => {
 	)
 }
 
-export default Navbar
+export default _Navbar

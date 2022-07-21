@@ -1,30 +1,36 @@
+import { FC, PropsWithChildren, useLayoutEffect, useState } from "react"
+
 import { Button } from "@chakra-ui/react"
-import { useLayoutEffect, useState } from "react"
 
-interface KeyProps {
-	letter: string
-	state: 0 | 1 | 2 | 3
-}
+import { Guess } from "../models/Room"
 
-const Key = (props: KeyProps) => {
+const Key: FC<
+	PropsWithChildren<{
+		letter: string
+		guess: Guess | null
+		handleKey: (letter: string) => void
+	}>
+> = props => {
+	const { letter, guess, handleKey } = props
+
 	const [color, setColor] = useState("hsl(200, 1%, 51%)")
 
 	useLayoutEffect(() => {
-		switch (props.state) {
-			case 0:
+		switch (guess) {
+			case null:
 				setColor("hsl(200, 1%, 51%)")
 				break
-			case 1:
+			case Guess.Incorrect:
 				setColor("absent")
 				break
-			case 2:
+			case Guess.Partial:
 				setColor("present")
 				break
-			case 3:
+			case Guess.Correct:
 				setColor("correct")
 				break
 		}
-	}, [props.state])
+	}, [guess])
 
 	return (
 		<Button
@@ -34,8 +40,9 @@ const Key = (props: KeyProps) => {
 			border="1px"
 			borderColor="transparent"
 			bg={color}
-			color="white">
-			{props.letter}
+			color="white"
+			onClick={() => handleKey(letter)}>
+			{letter}
 		</Button>
 	)
 }
