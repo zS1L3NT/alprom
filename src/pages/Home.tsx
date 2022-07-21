@@ -25,6 +25,7 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 				code: `${Math.floor(Math.random() * (99999 - 10000)) + 10000}`,
 				owner: username,
 				words: [],
+				startedAt: null,
 				game: {
 					[username]: {}
 				}
@@ -33,8 +34,8 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 			await setDoc(doc(roomsColl, room.id), room)
 			navigate("/lobby", {
 				state: {
-					username,
-					room
+					roomId: room.id,
+					username
 				}
 			})
 		} catch (e) {
@@ -69,13 +70,7 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 				navigate("/lobby", {
 					state: {
 						username,
-						room: {
-							...room,
-							game: {
-								...room!.game,
-								[username]: {}
-							}
-						}
+						roomId: snap!.id
 					}
 				})
 			}

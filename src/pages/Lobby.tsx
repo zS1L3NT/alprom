@@ -1,10 +1,13 @@
 import axios from "axios"
-import { deleteDoc, deleteField, doc, onSnapshot, updateDoc } from "firebase/firestore"
+import {
+	deleteDoc, deleteField, doc, DocumentReference, onSnapshot, updateDoc
+} from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import {
-	Button, Center, ListItem, OrderedList, Skeleton, Text, Tooltip, useToast, VStack
+	Button, Center, Fade, ListItem, OrderedList, Skeleton, Spinner, Text, Tooltip, useBoolean,
+	useToast, VStack
 } from "@chakra-ui/react"
 
 import { roomsColl } from "../firebase"
@@ -15,19 +18,20 @@ const Lobby = () => {
 	const navigate = useNavigate()
 	const toast = useToast()
 
+	const [isLoading, setIsLoading] = useBoolean()
 	const [username, setUsername] = useState<string | null>(null)
+	const [roomRef, setRoomRef] = useState<DocumentReference<iRoom> | null>(null)
 	const [room, setRoom] = useState<iRoom | null>(null)
-	const roomRef = doc(roomsColl, room?.id ?? "-")
 
 	useEffect(() => {
-		if (room === null) {
+		if (username === null) {
 			const state = location.state as {
-				room: iRoom
+				roomId: string
 				username: string
 			}
 
 			if (state) {
-				setRoom(state.room)
+				setRoomRef(doc(roomsColl, state.roomId))
 				setUsername(state.username)
 			} else {
 				navigate("/")
@@ -39,10 +43,10 @@ const Lobby = () => {
 				})
 			}
 		}
-	}, [room, location])
+	}, [username, location])
 
 	useEffect(() => {
-		if (room === null || username === null) return
+		if (roomRef === null || username === null) return
 
 		return onSnapshot(roomRef, doc => {
 			if (doc.exists()) {
@@ -77,37 +81,33 @@ const Lobby = () => {
 				}
 			} else {
 				navigate("/")
-				if (room.owner === username) {
-					toast({
-						title: "Room Closed",
-						description: "You closed the game room",
-						status: "success",
-						duration: 2500
-					})
-				} else {
-					toast({
-						title: "Room Closed",
-						description: "The game room has been closed",
-						status: "error",
-						duration: 2500
-					})
-				}
+				toast({
+					title: "Room Closed",
+					description: "The game room has been closed",
+					status: "error",
+					duration: 2500
+				})
 			}
 		})
-	}, [room, username])
+	}, [roomRef, username])
 
 	const startGame = async () => {
 		try {
+			setIsLoading.on()
 			await axios.post("http://alprom.zectan.com/api/next-round", {
 				code: room!.code,
 				username: username!
 			})
 		} catch (e) {
 			console.error(e)
+		} finally {
+			setIsLoading.off()
 		}
 	}
 
 	const leaveRoom = async () => {
+		if (roomRef === null) return
+
 		try {
 			await updateDoc(roomRef, `game.${username}`, deleteField())
 			navigate("/")
@@ -117,6 +117,8 @@ const Lobby = () => {
 	}
 
 	const closeRoom = async () => {
+		if (roomRef === null) return
+
 		try {
 			await deleteDoc(roomRef)
 		} catch (e) {
@@ -193,6 +195,18 @@ const Lobby = () => {
 				onClick={room?.owner === username ? closeRoom : leaveRoom}>
 				{room?.owner === username ? "Close room" : "Leave room"}
 			</Button>
+			<Fade in={isLoading}>
+				<Center
+					pos="absolute"
+					top={0}
+					left={0}
+					w={isLoading ? "100%" : 0}
+					h={isLoading ? "100%" : 0}
+					bg="black"
+					opacity="0.5">
+					<Spinner />
+				</Center>
+			</Fade>
 		</Center>
 	)
 }
