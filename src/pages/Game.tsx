@@ -87,7 +87,9 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					}
 
 					if (letterChunks.length < 6) {
-						letterChunks.push([])
+						letterChunks.push(
+							letters.slice(letterChunks.length * 5, letterChunks.length * 5 + 5)
+						)
 					}
 
 					setLetterChunks(letterChunks)
