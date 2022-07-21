@@ -5,8 +5,8 @@ import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import {
-	Badge, Box, Button, Center, chakra, Container, Divider, Fade, Flex, Grid, SimpleGrid,
-	Spinner, Text, useBoolean, useToast
+	Badge, Box, Button, Center, chakra, Container, Divider, Fade, Flex, Grid, SimpleGrid, Spinner,
+	Text, useBoolean, useToast
 } from "@chakra-ui/react"
 
 import Keyboard from "../components/Keyboard"
@@ -309,65 +309,66 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 		</Center>
 	) : (
 		<>
-			<Text
-				textAlign="center"
-				fontSize={48}
-				fontWeight="bold"
-				px={4}
-				mb={4}
-				mx="auto"
-				w="fit-content"
-				borderWidth="1px"
-				borderRadius={8}>
-				{(((endTime.diffNow().milliseconds / 60000) | 0) + "").padStart(2, "0")}:
-				{(((endTime.diffNow().milliseconds / 1000) % 60 | 0) + "").padStart(2, "0")}
-			</Text>
 			<Flex
 				justifyContent="space-evenly"
 				alignItems="center">
-				<SimpleGrid
-					display={Object.keys(room.game).length === 1 ? "none" : "block"}
-					w="fit-content"
-					columns={2}
-					columnGap={4}
-					rowGap={8}>
-					{Object.entries(room.game ?? {})
-						.filter(entry => entry[0] !== username)
-						.map(([username, data]) => {
-							const word = room.words[Object.keys(data).length - 1]!
-							const guesses = getGuesses(word, data[word]!)
+				<Flex direction="column">
+					<Text
+						textAlign="center"
+						fontSize={48}
+						fontWeight="bold"
+						px={4}
+						mb={4}
+						mx="auto"
+						w="180px"
+						borderWidth="1px"
+						borderRadius={8}>
+						{(((endTime.diffNow().milliseconds / 60000) | 0) + "").padStart(2, "0")}:
+						{(((endTime.diffNow().milliseconds / 1000) % 60 | 0) + "").padStart(2, "0")}
+					</Text>
+					<SimpleGrid
+						w="fit-content"
+						columns={2}
+						columnGap={4}
+						rowGap={8}>
+						{Object.entries(room.game)
+							.filter(entry => entry[0] !== username)
+							.map(([username, data]) => {
+								const word = room.words[Object.keys(data).length - 1]!
+								const guesses = getGuesses(word, data[word]!)
 
-							return (
-								<Box key={username}>
-									<Text
-										fontWeight="medium"
-										fontSize={20}
-										textAlign="center">
-										{username}
-									</Text>
-									<Text
-										mb={1}
-										fontSize={16}
-										color="gray.500"
-										textAlign="center">
-										Word: #{Object.keys(data).length}
-									</Text>
-									<Grid
-										templateColumns="repeat(5, min-content)"
-										gap={1.5}>
-										{guesses.map((guess, i) => (
-											<LetterSquare
-												key={i}
-												guess={guess}
-												letter=""
-												isSmall={true}
-											/>
-										))}
-									</Grid>
-								</Box>
-							)
-						})}
-				</SimpleGrid>
+								return (
+									<Box key={username}>
+										<Text
+											fontWeight="medium"
+											fontSize={20}
+											textAlign="center">
+											{username}
+										</Text>
+										<Text
+											mb={1}
+											fontSize={16}
+											color="gray.500"
+											textAlign="center">
+											Word: #{Object.keys(data).length}
+										</Text>
+										<Grid
+											templateColumns="repeat(5, min-content)"
+											gap={1.5}>
+											{guesses.map((guess, i) => (
+												<LetterSquare
+													key={i}
+													guess={guess}
+													letter=""
+													isSmall={true}
+												/>
+											))}
+										</Grid>
+									</Box>
+								)
+							})}
+					</SimpleGrid>
+				</Flex>
 				<Flex
 					direction="column"
 					alignItems="center">

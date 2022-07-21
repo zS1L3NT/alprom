@@ -34,7 +34,7 @@ const LetterSquare: FC<
 
 	return (
 		<Square
-			size={isSmall ? "1.5em" : "4.5em"}
+			size={isSmall ? "1.5em" : "4em"}
 			border={guess === null ? "2px solid hsl(240, 2%, 23%)" : "none"}
 			bg={color}>
 			<Text
