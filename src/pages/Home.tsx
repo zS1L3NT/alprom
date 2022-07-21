@@ -1,5 +1,5 @@
 import { doc, getDocs, limit, query, setDoc, updateDoc, where } from "firebase/firestore"
-import { FC, PropsWithChildren, useState } from "react"
+import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { CgEnter } from "react-icons/cg"
 import { useNavigate } from "react-router-dom"
 
@@ -17,6 +17,30 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 
 	const [username, setUsername] = useState("")
 	const [code, setCode] = useState("")
+
+	useEffect(() => {
+		const handler = (e: KeyboardEvent) => {
+			if (e.key === "Enter") {
+				handleKeyDown()
+			}
+		}
+
+		window.addEventListener("keydown", handler)
+
+		return () => {
+			window.removeEventListener("keydown", handler)
+		}
+	}, [username, code])
+
+	const handleKeyDown = () => {
+		if (username === "") return
+
+		if (code === "") {
+			createRoom()
+		} else {
+			joinRoom()
+		}
+	}
 
 	const createRoom = async () => {
 		try {
@@ -47,8 +71,8 @@ const _Home: FC<PropsWithChildren<{}>> = () => {
 		try {
 			const snaps = await getDocs(query(roomsColl, where("code", "==", code), limit(1)))
 			const snap = snaps.docs[0]
-			const room = snap?.data()
-
+			const room = snap?.data() ?? null
+			
 			if (room === null) {
 				toast({
 					title: "Error",
