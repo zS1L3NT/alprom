@@ -10,7 +10,7 @@ export default (answer: string, letters: string[]): (Guess | null)[] => {
 		for (let j = 0; j < 5; j++) {
 			const letter = word[j]!
 			if (answer.includes(letter)) {
-				if (answer.indexOf(letter) === j) {
+				if (answer[j] === letter) {
 					guesses.push(Guess.Correct)
 				} else {
 					guesses.push(Guess.Partial)

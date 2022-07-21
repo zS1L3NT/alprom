@@ -1,11 +1,12 @@
 import axios from "axios"
-import { doc, DocumentReference, onSnapshot, updateDoc } from "firebase/firestore"
+import { deleteDoc, doc, DocumentReference, onSnapshot, updateDoc } from "firebase/firestore"
 import { DateTime } from "luxon"
 import { FC, PropsWithChildren, useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import {
-	Box, Center, Fade, Flex, Grid, SimpleGrid, Spinner, Text, useBoolean, useToast
+	Badge, Box, Button, Center, chakra, Container, Divider, Fade, Flex, Grid, SimpleGrid,
+	Spinner, Text, useBoolean, useToast
 } from "@chakra-ui/react"
 
 import Keyboard from "../components/Keyboard"
@@ -13,7 +14,7 @@ import LetterSquare from "../components/LetterSquare"
 import { roomsColl } from "../firebase"
 import getGuesses from "../functions/getGuesses"
 import useForceRerender from "../hooks/useForceRerender"
-import { iRoom } from "../models/Room"
+import { Guess, iRoom } from "../models/Room"
 import words from "../words.json"
 
 const Game: FC<PropsWithChildren<{}>> = props => {
@@ -124,40 +125,41 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	}, [roomRef, room, username, word])
 
 	useEffect(() => {
-		if (!endTime) return
-
-		const interval = setInterval(() => {
-			if (endTime.diffNow().milliseconds < 1000) {
-				console.log("done");
-			} else {
-				forceRerender()
-			}
-		}, 1000)
+		const interval = setInterval(forceRerender, 1000)
 
 		return () => {
 			clearInterval(interval)
 		}
-	}, [endTime])
+	}, [])
 
 	const handleKey = (key: string) => {
-		if (roomRef === null || room === null || username === null || word === null) return
+		if (
+			roomRef === null ||
+			room === null ||
+			username === null ||
+			word === null ||
+			endTime === null ||
+			endTime.diffNow().milliseconds < 0
+		) {
+			return
+		}
 
 		switch (key) {
 			case "BACKSPACE":
 				toast.close("invalid-word-toast")
-				setLetterChunks(letters => {
-					if (letters.length === 0) return [[]]
+				setLetterChunks(letterChunks => {
+					if (letterChunks.length === 0) return [[]]
 
-					const row = letters.at(-1)!
-					if (row.length === 1) return [...letters.slice(0, -1), []]
+					const row = letterChunks.at(-1)!
+					if (row.length === 1) return [...letterChunks.slice(0, -1), []]
 
-					return [...letters.slice(0, -1), row.slice(0, -1)]
+					return [...letterChunks.slice(0, -1), row.slice(0, -1)]
 				})
 				break
 			case "ENTER":
-				setLetterChunks(letters => {
-					if (letters.at(-1)!.length === 5) {
-						if (!words.includes(letters.at(-1)!.join(""))) {
+				setLetterChunks(letterChunks => {
+					if (letterChunks.at(-1)!.length === 5) {
+						if (!words.includes(letterChunks.at(-1)!.join("").toLowerCase())) {
 							toast.close("invalid-word-toast")
 							setTimeout(() => {
 								toast({
@@ -169,18 +171,23 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 									isClosable: true
 								})
 							}, 0)
-							return letters
+							return letterChunks
 						} else {
 							toast.close("invalid-word-toast")
 						}
 
 						updateDoc(roomRef, `game.${username}.${word}`, [
 							...room!.game[username]![word]!,
-							...letters.at(-1)!
+							...letterChunks.at(-1)!
 						])
-						if (letters.length < 6) {
-							return [...letters, []]
-						} else {
+
+						const correct = getGuesses(word, letterChunks.flat())
+							.filter(guess => guess !== null)
+							.slice(-5)
+							.every(guess => guess === Guess.Correct)
+
+						if (letterChunks.length === 6 || correct) {
+							setEndTime(endTime => endTime!.plus({ seconds: correct ? 15 : 0 }))
 							setIsLoading.on()
 							axios
 								.post("http://alprom.zectan.com/api/next-round", {
@@ -188,37 +195,119 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 									username
 								})
 								.finally(setIsLoading.off)
-							return letters
+							return letterChunks
+						} else {
+							return [...letterChunks, []]
 						}
 					} else {
-						return letters
+						return letterChunks
 					}
 				})
 				break
 			default:
 				toast.close("invalid-word-toast")
 				if (alphabet.includes(key)) {
-					setLetterChunks(letters => {
-						if (letters.length === 1) {
-							if (letters[0]!.length === 0) return [[key]]
-							if (letters[0]!.length === 5) return letters
-							return [[...letters[0]!, key]]
+					setLetterChunks(letterChunks => {
+						if (letterChunks.length === 1) {
+							if (letterChunks[0]!.length === 0) return [[key]]
+							if (letterChunks[0]!.length === 5) return letterChunks
+							return [[...letterChunks[0]!, key]]
 						}
 
-						if (letters.at(-1)!.length === 5) return letters
+						if (letterChunks.at(-1)!.length === 5) return letterChunks
 
-						return [...letters.slice(0, -1), [...letters.at(-1)!, key]]
+						return [...letterChunks.slice(0, -1), [...letterChunks.at(-1)!, key]]
 					})
 				}
 				break
 		}
 	}
 
-	if (username === null || room === null || word === null || endTime === null) {
-		return <Spinner />
+	const leaveGame = async () => {
+		navigate("/")
 	}
 
-	return (
+	const closeGame = async () => {
+		if (roomRef === null) return
+
+		try {
+			await deleteDoc(roomRef)
+		} catch (e) {
+			console.error(e)
+		}
+	}
+
+	if (username === null || room === null || word === null || endTime === null) {
+		return (
+			<Center>
+				<Spinner />
+			</Center>
+		)
+	}
+
+	return endTime.diffNow().milliseconds < 0 ? (
+		<Center flexDirection="column">
+			<Container
+				p={6}
+				bg="hsl(240, 3%, 12%)"
+				rounded="lg">
+				<Text
+					fontSize={36}
+					fontWeight="bold">
+					Results
+				</Text>
+				<Divider my={4} />
+				{Object.entries(room.game)
+					.map<[string, number | null]>(([username, data]) => [
+						username,
+						DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
+							.milliseconds >
+						60000 + 15000 * (Object.keys(data).length - 1)
+							? Object.entries(data)
+									.map(([word, letters]) => letters.slice(-5).join("") === word)
+									.filter(res => !!res).length
+							: null
+					])
+					.sort((a, b) => {
+						if ((a[1] ?? 0) > (b[1] ?? 0)) return -1
+						if ((b[1] ?? 0) > (a[1] ?? 0)) return 1
+
+						return a[0].localeCompare(b[0])
+					})
+					.map(([username_, score], i) => (
+						<Text
+							key={username_}
+							display="flex"
+							fontSize={20}>
+							<chakra.b mr={1}>{i + 1}.</chakra.b>
+							{username_}
+							{username_ === username ? (
+								<Badge
+									mx={1}
+									my="auto">
+									{" "}
+									(You)
+								</Badge>
+							) : (
+								<></>
+							)}
+							{" - "}
+							<chakra.i ml={1}>{score ?? "(in game)"}</chakra.i>
+						</Text>
+					))}
+			</Container>
+			<Button
+				size="md"
+				w="xs"
+				mt={4}
+				bgColor="hsl(0, 70%, 53%)"
+				_hover={{ bgColor: "hsl(0, 70%, 45%)" }}
+				_active={{ bgColor: "hsl(0, 70%, 40%)" }}
+				onClick={room.owner === username ? closeGame : leaveGame}>
+				{room.owner === username ? "Close game" : "Leave game"}
+			</Button>
+		</Center>
+	) : (
 		<>
 			<Text
 				textAlign="center"
@@ -231,7 +320,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				borderWidth="1px"
 				borderRadius={8}>
 				{(((endTime.diffNow().milliseconds / 60000) | 0) + "").padStart(2, "0")}:
-				{(((endTime.diffNow().milliseconds / 1000 % 60) | 0) + "").padStart(2, "0")}
+				{(((endTime.diffNow().milliseconds / 1000) % 60 | 0) + "").padStart(2, "0")}
 			</Text>
 			<Flex
 				justifyContent="space-evenly"
