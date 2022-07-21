@@ -73,7 +73,7 @@ const Lobby = () => {
 				} else {
 					navigate("/")
 					toast({
-						title: "Kicked from room",
+						title: "Removed from room",
 						description: "Someone removed you from the game room",
 						status: "error",
 						duration: 2500
@@ -105,14 +105,20 @@ const Lobby = () => {
 		}
 	}
 
-	const leaveRoom = async () => {
+	const removeFromRoom = async (username: string) => {
 		if (roomRef === null) return
 
 		try {
 			await updateDoc(roomRef, `game.${username}`, deleteField())
-			navigate("/")
 		} catch (e) {
 			console.error(e)
+		}
+	}
+
+	const leaveRoom = async () => {
+		if (username !== null) {
+			await removeFromRoom(username)
+			navigate("/")
 		}
 	}
 
@@ -159,10 +165,19 @@ const Lobby = () => {
 								<ListItem
 									key={index}
 									fontSize="xl"
-									_hover={{
-										textDecoration: "line-through",
-										textDecorationThickness: "3px",
-										cursor: "pointer"
+									_hover={
+										room?.owner === username && name !== username
+											? {
+													textDecoration: "line-through",
+													textDecorationThickness: "3px",
+													cursor: "pointer"
+											  }
+											: {}
+									}
+									onClick={() => {
+										if (room?.owner === username && name !== username) {
+											removeFromRoom(name)
+										}
 									}}>
 									{name}
 								</ListItem>
