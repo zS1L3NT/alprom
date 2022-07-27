@@ -297,15 +297,19 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				</Text>
 				<Divider my={4} />
 				{Object.entries(room.game)
-					.map<[string, number, number]>(([username, data]) => [
+					.map<[string, number]>(([username, data]) => [
 						username,
-						60000 +
-							15000 * (Object.keys(data).length - 1) -
-							DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
-								.milliseconds,
 						Object.entries(data)
 							.map(([word, letters]) => letters.slice(-5).join("") === word)
 							.filter(res => !!res).length
+					])
+					.map<[string, number, number]>(([username, score]) => [
+						username,
+						60000 +
+							15000 * score -
+							DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
+								.milliseconds,
+						score
 					])
 					.sort((a, b) => {
 						if (a[2] > b[2]) return -1
@@ -358,7 +362,9 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				onClick={room.owner === username ? closeGame : leaveGame}>
 				{room.owner === username ? "Close game" : "Leave game"}
 			</Button>
-			<Box mt={4} w="250px">
+			<Box
+				mt={4}
+				w="250px">
 				<Text>Previous word:</Text>
 				<Text
 					fontSize={24}
