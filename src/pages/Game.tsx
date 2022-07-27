@@ -358,6 +358,24 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				onClick={room.owner === username ? closeGame : leaveGame}>
 				{room.owner === username ? "Close game" : "Leave game"}
 			</Button>
+			<Box mt={4} w="250px">
+				<Text>Previous word:</Text>
+				<Text
+					fontSize={24}
+					fontWeight="bold">
+					{room.words[Object.keys(room.game[username]!).length - 1]}
+				</Text>
+				{Object.entries(
+					definitions[room.words[Object.keys(room.game[username]!).length - 1]!]!
+				).map(([partOfSentence, meaning]) => (
+					<Box mt={2}>
+						<Text>
+							<i>{partOfSentence}:</i>
+						</Text>
+						<Text ml={6}>{meaning}</Text>
+					</Box>
+				))}
+			</Box>
 		</Center>
 	) : (
 		<>
