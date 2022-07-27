@@ -301,23 +301,25 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 				</Text>
 				<Divider my={4} />
 				{Object.entries(room.game)
-					.map<[string, number | null]>(([username, data]) => [
+					.map<[string, number, number]>(([username, data]) => [
 						username,
-						DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
-							.milliseconds >
-						60000 + 15000 * (Object.keys(data).length - 1)
-							? Object.entries(data)
-									.map(([word, letters]) => letters.slice(-5).join("") === word)
-									.filter(res => !!res).length
-							: null
+						60000 +
+							15000 * (Object.keys(data).length - 1) -
+							DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
+								.milliseconds,
+						Object.entries(data)
+							.map(([word, letters]) => letters.slice(-5).join("") === word)
+							.filter(res => !!res).length
 					])
 					.sort((a, b) => {
-						if ((a[1] ?? 0) > (b[1] ?? 0)) return -1
-						if ((b[1] ?? 0) > (a[1] ?? 0)) return 1
+						if (a[2] > b[2]) return -1
+						if (b[2] > a[2]) return 1
+						if (a[1] > b[1]) return -1
+						if (b[1] > a[1]) return 1
 
 						return a[0].localeCompare(b[0])
 					})
-					.map(([username_, score], i) => (
+					.map(([username_, milliseconds, score], i) => (
 						<Text
 							key={username_}
 							display="flex"
@@ -335,7 +337,18 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 								<></>
 							)}
 							{" - "}
-							<chakra.i ml={1}>{score ?? "(in game)"}</chakra.i>
+							<chakra.i ml={1}>{score}</chakra.i>
+							<Badge
+								colorScheme={milliseconds > 0 ? "green" : "red"}
+								h="fit-content"
+								mx={2}
+								my="auto">
+								{milliseconds > 0
+									? (((milliseconds / 60000) | 0) + "").padStart(2, "0") +
+									  ":" +
+									  (((milliseconds / 1000) % 60 | 0) + "").padStart(2, "0")
+									: "Times Up"}
+							</Badge>
 						</Text>
 					))}
 			</Container>
