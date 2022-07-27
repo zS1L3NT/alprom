@@ -92,7 +92,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 
 					setLetterChunks(letterChunks => {
 						return newLetterChunks.map((newLetterChunk, i) =>
-							newLetterChunk.length === 0 ? letterChunks[i]! : newLetterChunk
+							newLetterChunk.length === 0 ? letterChunks[i] ?? [] : newLetterChunk
 						)
 					})
 				} else {
@@ -115,6 +115,10 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 			}
 		})
 	}, [roomRef, username, word])
+
+	useEffect(() => {
+		setLetterChunks([[]])
+	}, [word])
 
 	useEffect(() => {
 		const handler = async (e: KeyboardEvent) => {
