@@ -1,4 +1,3 @@
-import axios from "axios"
 import {
 	deleteDoc, deleteField, doc, DocumentReference, onSnapshot, updateDoc
 } from "firebase/firestore"
@@ -11,6 +10,7 @@ import {
 } from "@chakra-ui/react"
 
 import { roomsColl } from "../firebase"
+import nextWord from "../functions/nextWord"
 import { iRoom } from "../models/Room"
 
 const Lobby = () => {
@@ -92,12 +92,11 @@ const Lobby = () => {
 	}, [roomRef, username])
 
 	const startGame = async () => {
+		if (roomRef === null || room === null || username === null) return
+
 		try {
 			setIsLoading.on()
-			await axios.post("http://alprom.zectan.com/api/next-round", {
-				code: room!.code,
-				username: username!
-			})
+			await nextWord(roomRef, room, username)
 		} catch (e) {
 			console.error(e)
 		} finally {

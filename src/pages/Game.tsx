@@ -11,11 +11,12 @@ import {
 
 import Keyboard from "../components/Keyboard"
 import LetterSquare from "../components/LetterSquare"
+import { validWords } from "../data"
 import { roomsColl } from "../firebase"
 import getGuesses from "../functions/getGuesses"
+import nextWord from "../functions/nextWord"
 import useForceRerender from "../hooks/useForceRerender"
 import { Guess, iRoom } from "../models/Room"
-import words from "../words.json"
 
 const Game: FC<PropsWithChildren<{}>> = props => {
 	const forceRerender = useForceRerender()
@@ -202,7 +203,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 			case "ENTER":
 				setLetterChunks(letterChunks => {
 					if (letterChunks.at(-1)!.length === 5) {
-						if (!words.includes(letterChunks.at(-1)!.join("").toLowerCase())) {
+						if (!validWords.includes(letterChunks.at(-1)!.join("").toLowerCase())) {
 							toast.close("invalid-word-toast")
 							setTimeout(() => {
 								toast({
@@ -232,12 +233,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						if (letterChunks.length === 6 || correct) {
 							setEndTime(endTime => endTime!.plus({ seconds: correct ? 15 : 0 }))
 							setIsLoading.on()
-							axios
-								.post("http://alprom.zectan.com/api/next-round", {
-									code: room!.code,
-									username
-								})
-								.finally(setIsLoading.off)
+							nextWord(roomRef, room, username).finally(setIsLoading.off)
 							return letterChunks
 						} else {
 							return [...letterChunks, []]
