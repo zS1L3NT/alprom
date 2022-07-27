@@ -80,19 +80,21 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					)
 
 					const letters = room.game[username]![word]!
-					const letterChunks = []
+					const newLetterChunks: string[][] = []
 
 					for (let i = 0; i < letters.length; i += 5) {
-						letterChunks.push(letters.slice(i, i + 5))
+						newLetterChunks.push(letters.slice(i, i + 5))
 					}
 
-					if (letterChunks.length < 6) {
-						letterChunks.push(
-							letters.slice(letterChunks.length * 5, letterChunks.length * 5 + 5)
+					if (newLetterChunks.length < 6) {
+						newLetterChunks.push([])
+					}
+
+					setLetterChunks(letterChunks => {
+						return newLetterChunks.map((newLetterChunk, i) =>
+							newLetterChunk.length === 0 ? letterChunks[i]! : newLetterChunk
 						)
-					}
-
-					setLetterChunks(letterChunks)
+					})
 				} else {
 					navigate("/")
 					toast({
