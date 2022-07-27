@@ -18,6 +18,9 @@ import nextWord from "../functions/nextWord"
 import useForceRerender from "../hooks/useForceRerender"
 import { Guess, iRoom } from "../models/Room"
 
+const INITIAL_SECONDS = 180
+const INCREMENT_SECONDS = 30
+
 const Game: FC<PropsWithChildren<{}>> = props => {
 	const forceRerender = useForceRerender()
 	const location = useLocation()
@@ -78,8 +81,8 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						endTime =>
 							endTime ??
 							DateTime.fromJSDate(room.startedAt!.toDate()).plus({
-								minutes: 1,
-								seconds: 15 * answered
+								minutes: INITIAL_SECONDS / 60,
+								seconds: INCREMENT_SECONDS * answered
 							})
 					)
 
@@ -231,7 +234,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 							.every(guess => guess === Guess.Correct)
 
 						if (letterChunks.length === 6 || correct) {
-							setEndTime(endTime => endTime!.plus({ seconds: correct ? 15 : 0 }))
+							setEndTime(endTime => endTime!.plus({ seconds: correct ? INCREMENT_SECONDS : 0 }))
 							setIsLoading.on()
 							nextWord(roomRef, room, username).finally(setIsLoading.off)
 							return letterChunks
@@ -305,8 +308,8 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					])
 					.map<[string, number, number]>(([username, score]) => [
 						username,
-						60000 +
-							15000 * score -
+						INITIAL_SECONDS * 1000 +
+							INCREMENT_SECONDS * 1000 * score -
 							DateTime.now().diff(DateTime.fromJSDate(room.startedAt!.toDate()))
 								.milliseconds,
 						score
