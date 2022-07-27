@@ -30,9 +30,11 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 	const [word, setWord] = useState<string | null>(null)
 	const [letterChunks, setLetterChunks] = useState<string[][]>([[]])
 	const [endTime, setEndTime] = useState<DateTime | null>(null)
+	const [definitions, setDefinitions] = useState<Record<string, Record<string, string>>>({})
 
 	const alphabet = Array.from(Array(26)).map((_, i) => String.fromCharCode(i + 65))
 
+	// Load the data from the navigation state
 	useEffect(() => {
 		if (username === null) {
 			const state = location.state as {
@@ -57,6 +59,7 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 		}
 	}, [username, location])
 
+	// Create listener to the roomRef
 	useEffect(() => {
 		if (roomRef === null || username === null || word === null) return
 
@@ -116,10 +119,12 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 		})
 	}, [roomRef, username, word])
 
+	// Empty the letters after the word changes
 	useEffect(() => {
 		setLetterChunks([[]])
 	}, [word])
 
+	// Listen to keypresses
 	useEffect(() => {
 		const handler = async (e: KeyboardEvent) => {
 			handleKey(e.key.toUpperCase())
@@ -132,6 +137,36 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 		}
 	}, [roomRef, room, username, word])
 
+	// Fetch the dictionary data of each word
+	useEffect(() => {
+		if (!room?.words) return
+
+		setDefinitions(definitions => {
+			const words = room.words.filter(word => !(word in definitions))
+
+			for (const word of words) {
+				axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`).then(res => {
+					setDefinitions(definitions => ({
+						...definitions,
+						[word]: res.data[0].meanings.reduce(
+							(acc: Record<string, string>, meaning: any) => ({
+								...acc,
+								[meaning.partOfSpeech]: meaning.definitions[0].definition
+							}),
+							{}
+						)
+					}))
+				})
+			}
+
+			return {
+				...definitions,
+				...words.reduce((words, word) => ({ ...words, [word]: null }), {})
+			}
+		})
+	}, [room?.words])
+
+	// Rerender the widget every second to make the clock update
 	useEffect(() => {
 		const interval = setInterval(forceRerender, 1000)
 
@@ -415,6 +450,26 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 						handleKey={handleKey}
 					/>
 				</Flex>
+				<Box w="250px">
+					<Text>Previous word:</Text>
+					<Text
+						fontSize={24}
+						fontWeight="bold">
+						{room.words[Object.keys(room.game[username]!).length - 2] ?? "no word"}
+					</Text>
+					{Object.entries(
+						definitions[
+							room.words[Object.keys(room.game[username]!).length - 2] ?? ""
+						] ?? {}
+					).map(([partOfSentence, meaning]) => (
+						<Box mt={2}>
+							<Text>
+								<i>{partOfSentence}:</i>
+							</Text>
+							<Text ml={6}>{meaning}</Text>
+						</Box>
+					))}
+				</Box>
 			</Flex>
 			<Fade in={isLoading}>
 				<Center
