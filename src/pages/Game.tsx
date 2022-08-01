@@ -234,7 +234,9 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 							.every(guess => guess === Guess.Correct)
 
 						if (letterChunks.length === 6 || correct) {
-							setEndTime(endTime => endTime!.plus({ seconds: correct ? INCREMENT_SECONDS : 0 }))
+							setEndTime(endTime =>
+								endTime!.plus({ seconds: correct ? INCREMENT_SECONDS : 0 })
+							)
 							setIsLoading.on()
 							nextWord(roomRef, room, username).finally(setIsLoading.off)
 							return letterChunks
@@ -487,22 +489,25 @@ const Game: FC<PropsWithChildren<{}>> = props => {
 					/>
 				</Flex>
 				<Box w="250px">
-					<Text>Previous word:</Text>
-					<Text
-						fontSize={24}
-						fontWeight="bold">
-						{room.words[Object.keys(room.game[username]!).length - 2] ?? "no word"}
-					</Text>
+					<Text>Current word definition:</Text>
 					{Object.entries(
-						definitions[
-							room.words[Object.keys(room.game[username]!).length - 2] ?? ""
-						] ?? {}
+						definitions[room.words[Object.keys(room.game[username]!).length - 1]!] ?? {}
 					).map(([partOfSentence, meaning]) => (
-						<Box mt={2}>
+						<Box
+							key={partOfSentence}
+							mt={2}>
 							<Text>
 								<i>{partOfSentence}:</i>
 							</Text>
-							<Text ml={6}>{meaning}</Text>
+							<Text ml={6}>
+								{meaning.replaceAll(
+									new RegExp(
+										room.words[Object.keys(room.game[username]!).length - 1]!,
+										"ig"
+									),
+									"*****"
+								)}
+							</Text>
 						</Box>
 					))}
 				</Box>
